@@ -1,0 +1,260 @@
+{% extends "base.html" %}
+
+{% block title %}Kanban | GMS{% endblock %}
+{% block page_title %}JOB PIPELINE{% endblock %}
+
+{% block extra_css %}
+<style>
+.kanban-board {
+    display: flex;
+    overflow-x: auto;
+    padding-bottom: 20px;
+    gap: 16px;
+    height: calc(100vh - 180px);
+}
+.kanban-column {
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: var(--glass-border);
+    border-radius: var(--glass-radius);
+    min-width: 290px;
+    max-width: 290px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--glass-shadow);
+    transition: var(--transition);
+}
+.kanban-column:hover {
+    border-color: rgba(255,255,255,0.12);
+}
+.kanban-header {
+    padding: 16px;
+    border-bottom: 2px solid var(--accent);
+    font-family: 'Poppins', sans-serif; font-weight: 500, sans-serif;
+    font-size: 0.8rem;
+    letter-spacing: 1px;
+    color: var(--text-primary);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.kanban-cards {
+    padding: 10px;
+    overflow-y: auto;
+    flex-grow: 1;
+    min-height: 150px;
+}
+.kanban-card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-left: 4px solid var(--color-blue-info);
+    border-radius: 12px;
+    padding: 14px;
+    margin-bottom: 10px;
+    cursor: grab;
+    transition: var(--transition);
+}
+.kanban-card:hover {
+    transform: translateY(-2px);
+    background: rgba(255,255,255,0.06);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+}
+.kanban-card:active { cursor: grabbing; }
+.kanban-card.dragging { opacity: 0.4; transform: scale(0.96); }
+.card-title {
+    font-family: 'Poppins', sans-serif; font-weight: 500, sans-serif;
+    color: var(--accent);
+    font-size: 1rem;
+    margin-bottom: 6px;
+    display: flex;
+    justify-content: space-between;
+}
+.card-details {
+    font-family: 'Inter', sans-serif; font-weight: 600, monospace;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+}
+
+/* Status Colors — border glow */
+.col-Received .kanban-header        { border-bottom-color: #6b7280; }
+.col-Received .kanban-card          { border-left-color: #6b7280; }
+
+.col-Diagnosing .kanban-header      { border-bottom-color: var(--color-blue-info); }
+.col-Diagnosing .kanban-card        { border-left-color: var(--color-blue-info); }
+
+.col-In-Progress .kanban-header     { border-bottom-color: #f97316; }
+.col-In-Progress .kanban-card       { border-left-color: #f97316; }
+
+.col-Quality-Check .kanban-header   { border-bottom-color: #a855f7; }
+.col-Quality-Check .kanban-card     { border-left-color: #a855f7; }
+
+.col-Ready .kanban-header           { border-bottom-color: var(--color-green-ok); }
+.col-Ready .kanban-card             { border-left-color: var(--color-green-ok); }
+
+.col-Delivered .kanban-header       { border-bottom-color: #facc15; }
+.col-Delivered .kanban-card         { border-left-color: #facc15; opacity: 0.75; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div style="display:flex; justify-content:flex-end; margin-bottom:15px;">
+    {% if current_user.role in ['Admin', 'Mechanic'] %}
+    <a href="{{ url_for('jobs.create') }}" class="btn-metal"><i class="fas fa-plus"></i> NEW JOB CARD</a>
+    {% endif %}
+</div>
+
+<div class="kanban-board">
+    {% for status in statuses %}
+    {% set safe_status = status | replace(' ', '-') %}
+    <div class="kanban-column col-{{ safe_status }}" data-status="{{ status }}">
+        <div class="kanban-header">
+            <span>{{ status | upper }}</span>
+            <span class="badge-gold">{{ board[status]|length }}</span>
+        </div>
+        <div class="kanban-cards">
+            {% for job in board[status] %}
+            <div class="kanban-card" draggable="true" data-id="{{ job.id }}" onclick="window.location.href='/jobs/{{ job.id }}'">
+                <div class="card-title">
+                    <span>WO-{{ "%04d" | format(job.id) }}</span>
+                    {% if job.mechanic %}
+                        <i class="fas fa-wrench" title="{{ job.mechanic.username if job.mechanic else 'Unassigned' }}"></i>
+                    {% endif %}
+                </div>
+                <div class="card-details">
+                    <div><i class="fas fa-car text-gold"></i> {{ job.vehicle.make }} {{ job.vehicle.model }}</div>
+                    <div><i class="fas fa-user"></i> {{ job.customer.name }}</div>
+                    <div style="margin-top:5px; font-size:0.8rem; color:var(--color-text-muted);">
+                        <i class="far fa-clock"></i> {{ job.created_at.strftime('%m/%d %H:%M') }}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const cards = document.querySelectorAll('.kanban-card');
+    const columns = document.querySelectorAll('.kanban-cards');
+    
+    let draggedCard = null;
+    let originalColumn = null;
+    let originalNextSibling = null;
+
+    cards.forEach(card => {
+        card.addEventListener('dragstart', (e) => {
+            draggedCard = card;
+            originalColumn = card.parentElement;
+            originalNextSibling = card.nextElementSibling;
+            setTimeout(() => card.classList.add('className', 'dragging'), 0);
+        });
+        
+        card.addEventListener('dragend', () => {
+            if(draggedCard) draggedCard.classList.remove('dragging');
+        });
+        
+        // Prevent click navigation if dragging just finished to avoid accidental nav
+        card.addEventListener('click', (e) => {
+            if (card.classList.contains('dragging')) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+        });
+    });
+
+    columns.forEach(column => {
+        column.addEventListener('dragover', e => {
+            e.preventDefault();
+            const afterElement = getDragAfterElement(column, e.clientY);
+            const draggable = document.querySelector('.dragging');
+            if (draggable) {
+                if (afterElement == null) {
+                    column.appendChild(draggable);
+                } else {
+                    column.insertBefore(draggable, afterElement);
+                }
+            }
+        });
+        
+        column.addEventListener('drop', async e => {
+            e.preventDefault();
+            if (!draggedCard) return;
+            
+            const cardToUpdate = draggedCard;
+            const fallbackColumn = originalColumn;
+            const fallbackSibling = originalNextSibling;
+            
+            const statusContainer = column.closest('.kanban-column');
+            const newStatus = statusContainer.getAttribute('data-status');
+            const jobId = cardToUpdate.getAttribute('data-id');
+            
+            // Send AJAX update (Optimistic UI)
+            try {
+                // If the column didn't actually change and it's just reordering, we can skip API if reordering isn't saved
+                // For now we always hit the API just to ensure status is fresh.
+                const formData = new FormData();
+                formData.append('status', newStatus);
+                const res = await fetchWithCSRF(`/jobs/${jobId}/status`, {
+                    method: 'POST',
+                    body: formData,
+                    headers: { 'Accept': 'application/json' }
+                });
+                
+                if (!res.ok) throw new Error("Server returned " + res.status);
+                
+                const data = await res.json();
+                if(data.success) {
+                    showToast(`Job WO-${jobId.padStart(4, '0')} moved to ${newStatus}`, "success");
+                    updateBadges();
+                } else {
+                    throw new Error(data.message || "Update failed");
+                }
+            } catch (err) {
+                console.error("Optimistic UI Rollback due to:", err);
+                showToast("Failed to update status on server. Reverting card.", "error");
+                // Rollback DOM
+                if (fallbackSibling && fallbackColumn.contains(fallbackSibling)) {
+                    fallbackColumn.insertBefore(cardToUpdate, fallbackSibling);
+                } else {
+                    fallbackColumn.appendChild(cardToUpdate);
+                }
+                updateBadges();
+            } finally {
+                if (cardToUpdate) {
+                    cardToUpdate.classList.remove('dragging');
+                }
+                if (draggedCard === cardToUpdate) {
+                    draggedCard = null;
+                }
+            }
+        });
+    });
+
+    function getDragAfterElement(container, y) {
+        const draggableElements = [...container.querySelectorAll('.kanban-card:not(.dragging)')];
+        return draggableElements.reduce((closest, child) => {
+            const box = child.getBoundingClientRect();
+            const offset = y - box.top - box.height / 2;
+            if (offset < 0 && offset > closest.offset) {
+                return { offset: offset, element: child }
+            } else {
+                return closest;
+            }
+        }, { offset: Number.NEGATIVE_INFINITY }).element;
+    }
+    
+    function updateBadges() {
+        document.querySelectorAll('.kanban-column').forEach(col => {
+            const count = col.querySelectorAll('.kanban-card').length;
+            col.querySelector('.badge-gold').textContent = count;
+        });
+    }
+});
+</script>
+{% endblock %}

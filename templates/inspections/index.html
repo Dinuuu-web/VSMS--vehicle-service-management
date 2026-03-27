@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Inspections - VSMS{% endblock %}
+{% block page_title %}Vehicle Inspections{% endblock %}
+
+{% block page_actions %}
+<a href="{{ url_for('inspections.add') }}" class="btn-metal btn-small"><i class="fas fa-plus"></i> New Inspection</a>
+{% endblock %}
+
+{% block content %}
+<div class="glass-card fade-in">
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Vehicle</th>
+                <th>Job Card</th>
+                <th>Inspector</th>
+                <th>Date</th>
+                <th>Score</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for ins in inspections %}
+            <tr>
+                <td>#{{ ins.id }}</td>
+                <td style="color:var(--text-primary);">{{ ins.vehicle_id }}</td>
+                <td>{{ ins.job_card_id or 'N/A' }}</td>
+                <td>{{ ins.inspector_id }}</td>
+                <td>{{ ins.created_at.strftime('%Y-%m-%d') }}</td>
+                <td>
+                    {% if ins.overall_score >= 80 %}<span class="text-green"><i class="fas fa-check-circle"></i> {{ ins.overall_score }}%</span>
+                    {% elif ins.overall_score >= 50 %}<span class="text-gold"><i class="fas fa-exclamation-triangle"></i> {{ ins.overall_score }}%</span>
+                    {% else %}<span class="text-red"><i class="fas fa-times-circle"></i> {{ ins.overall_score }}%</span>{% endif %}
+                </td>
+                <td>
+                    <button class="btn-metal btn-small" onclick="alert('PDF Report Generation coming soon')"><i class="fas fa-file-pdf"></i> PDF</button>
+                </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="7" style="text-align:center;">No inspections found.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

@@ -1,0 +1,334 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - VSMS{% endblock %}
+{% block page_title %}Garage Dashboard{% endblock %}
+
+{% block page_actions %}
+<div class="topbar-actions" style="display: flex; gap: 10px; align-items: center;">
+    <div style="background: rgba(255,255,255,0.05); padding: 5px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); display: flex; gap: 5px;">
+        <a href="/dashboard/?timeframe=today" class="btn-metal btn-small timeframe-btn {% if timeframe == 'today' %}active{% endif %}">Today</a>
+        <a href="/dashboard/?timeframe=weekly" class="btn-metal btn-small timeframe-btn {% if timeframe == 'weekly' %}active{% endif %}">Weekly</a>
+        <a href="/dashboard/?timeframe=monthly" class="btn-metal btn-small timeframe-btn {% if timeframe == 'monthly' %}active{% endif %}">Monthly</a>
+    </div>
+    <a href="/jobs/create" class="btn-primary btn-small"><i class="fas fa-plus"></i> New Job</a>
+</div>
+<style>
+.timeframe-btn {
+    padding: 6px 12px; 
+    font-size: 0.75rem; 
+    border: none; 
+    background: transparent; 
+    color: var(--text-muted);
+}
+.timeframe-btn.active {
+    background: var(--accent); 
+    color: #fff; 
+    box-shadow: 0 0 10px var(--accent-glow);
+}
+.status-badge {
+    background: rgba(255,255,255,0.05);
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+.status-default { color: #6b7280; border: 1px solid #6b7280; }
+.status-received { color: #3b82f6; border: 1px solid #3b82f6; }
+.status-diagnosing { color: #f59e0b; border: 1px solid #f59e0b; }
+.status-progress { color: #f97316; border: 1px solid #f97316; }
+.status-quality { color: #8b5cf6; border: 1px solid #8b5cf6; }
+.status-ready { color: #22c55e; border: 1px solid #22c55e; }
+
+.stat-card.revenue-card {
+    border: 1px solid var(--accent);
+    box-shadow: 0 0 20px var(--accent-glow);
+    transform: scale(1.02);
+    z-index: 5;
+}
+.stat-card.revenue-card:hover { transform: scale(1.04); }
+.bay-value {
+    font-size: 28px;
+    font-weight: 600;
+    text-align: center;
+    font-family: 'Inter', sans-serif;
+    color: var(--text-primary);
+    position: absolute;
+    bottom: -5px;
+    width: 100%;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-grid">
+    <div class="stat-card stagger-1" onclick="window.location.href='/jobs'">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+            <div>
+                <div style="font-family:'Inter'; font-weight:600; text-transform:uppercase; color:var(--text-muted); font-size:0.75rem; margin-bottom:10px; letter-spacing:1px;">ACTIVE JOBS</div>
+                <div style="font-size:2.2rem; font-weight:700; color:var(--text-primary);"><span data-count="{{ active_jobs|default(0) }}">0</span></div>
+                <div style="font-size:0.8rem; color:var(--accent); font-family:'Inter'; margin-top:5px;">In Bay Right Now</div>
+            </div>
+            <div style="font-size:1.8rem; color:var(--accent); opacity:0.8; background:rgba(168,85,247,0.1); padding:12px; border-radius:12px;"><i class="fas fa-wrench"></i></div>
+        </div>
+    </div>
+    
+    <div class="stat-card stagger-2 revenue-card" onclick="window.location.href='/billing'">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+            <div>
+                <div style="font-family:'Inter'; font-weight:600; text-transform:uppercase; color:var(--text-muted); font-size:0.75rem; margin-bottom:10px; letter-spacing:1px;">{{ timeframe|upper }} REVENUE</div>
+                <div style="font-size:2.2rem; font-weight:700; color:var(--color-green-ok);"><small style="font-size:1.4rem;">₹</small><span data-count="{{ today_revenue|default(0)|int }}">0</span></div>
+                <div style="font-size:0.8rem; font-family:'Inter'; margin-top:5px; display:flex; align-items:center; gap:5px;">
+                    {% if revenue_pct >= 0 %}
+                        <span style="color:var(--color-green-ok); background:rgba(34,197,94,0.1); padding:2px 6px; border-radius:4px;"><i class="fas fa-arrow-up"></i> {{ revenue_pct }}%</span> <span style="color:var(--text-muted);">vs prev</span>
+                    {% else %}
+                        <span style="color:#ef4444; background:rgba(239,68,68,0.1); padding:2px 6px; border-radius:4px;"><i class="fas fa-arrow-down"></i> {{ revenue_pct|abs }}%</span> <span style="color:var(--text-muted);">vs prev</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div style="font-size:1.8rem; color:var(--color-green-ok); opacity:0.8; background:rgba(34,197,94,0.1); padding:12px; border-radius:12px;"><i class="fas fa-rupee-sign"></i></div>
+        </div>
+    </div>
+    
+    <div class="stat-card stagger-3" onclick="window.location.href='/vehicles'">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+            <div>
+                <div style="font-family:'Inter'; font-weight:600; text-transform:uppercase; color:var(--text-muted); font-size:0.75rem; margin-bottom:10px; letter-spacing:1px;">VEHICLES ({{ timeframe|upper }})</div>
+                <div style="font-size:2.2rem; font-weight:700; color:var(--text-primary);"><span data-count="{{ month_vehicles|default(0) }}">0</span></div>
+                <div style="font-size:0.8rem; font-family:'Inter'; margin-top:5px; display:flex; align-items:center; gap:5px;">
+                    {% if vehicles_pct >= 0 %}
+                        <span style="color:var(--color-green-ok); background:rgba(34,197,94,0.1); padding:2px 6px; border-radius:4px;"><i class="fas fa-arrow-up"></i> {{ vehicles_pct }}%</span> <span style="color:var(--text-muted);">vs prev</span>
+                    {% else %}
+                        <span style="color:#ef4444; background:rgba(239,68,68,0.1); padding:2px 6px; border-radius:4px;"><i class="fas fa-arrow-down"></i> {{ vehicles_pct|abs }}%</span> <span style="color:var(--text-muted);">vs prev</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div style="font-size:1.8rem; color:#3b82f6; opacity:0.8; background:rgba(59,130,246,0.1); padding:12px; border-radius:12px;"><i class="fas fa-car"></i></div>
+        </div>
+    </div>
+    
+    <div class="stat-card stagger-4" onclick="window.location.href='/jobs'">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+            <div>
+                <div style="font-family:'Inter'; font-weight:600; text-transform:uppercase; color:var(--text-muted); font-size:0.75rem; margin-bottom:10px; letter-spacing:1px;">PENDING JOBS</div>
+                <div style="font-size:2.2rem; font-weight:700; color:#f59e0b;"><span data-count="{{ pending_jobs|default(0) }}">0</span></div>
+                <div style="font-size:0.8rem; font-family:'Inter'; margin-top:5px; display:flex; align-items:center; gap:5px;">
+                    {% if pending_pct >= 0 %}
+                        <span style="color:#ef4444; background:rgba(239,68,68,0.1); padding:2px 6px; border-radius:4px;"><i class="fas fa-arrow-up"></i> {{ pending_pct }}%</span> <span style="color:var(--text-muted);">vs prev</span>
+                    {% else %}
+                        <span style="color:var(--color-green-ok); background:rgba(34,197,94,0.1); padding:2px 6px; border-radius:4px;"><i class="fas fa-arrow-down"></i> {{ pending_pct|abs }}%</span> <span style="color:var(--text-muted);">vs prev</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div style="font-size:1.8rem; color:#f59e0b; opacity:0.8; background:rgba(245,158,11,0.1); padding:12px; border-radius:12px;"><i class="fas fa-clock"></i></div>
+        </div>
+    </div>
+</div>
+
+<div style="display:grid; grid-template-columns: 2fr 1fr; gap:24px; margin-bottom:24px;">
+    <!-- Revenue Chart -->
+    <div class="glass-card stagger-1" style="margin-bottom:0;">
+        <h3 style="font-size:1.1rem; margin-bottom:20px; color:var(--text-primary);"><i class="fas fa-chart-line text-accent"></i> Revenue Trend (Last 7 Days)</h3>
+        <div style="position: relative; height: 250px; width: 100%;">
+            <canvas id="revenueChart"></canvas>
+        </div>
+    </div>
+    
+    <!-- Bay Occupancy Gauge -->
+    <div class="glass-card stagger-2" style="margin-bottom:0; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+        <h3 style="font-size:1.1rem; width:100%; text-align:left; color:var(--text-primary); margin-bottom:20px;"><i class="fas fa-warehouse text-accent"></i> Bay Occupancy</h3>
+        
+        <div style="position:relative; width:200px; height:100px; overflow:hidden;">
+            <!-- Simple SVG Gauge Arc -->
+            <svg viewBox="0 0 200 100" style="width:100%; height:100%;">
+                <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="var(--bg-secondary)" stroke-width="20" stroke-linecap="round"/>
+                <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#goldGradient)" stroke-width="20" stroke-linecap="round" stroke-dasharray="251.2" stroke-dashoffset="60" style="transition: stroke-dashoffset 1s ease-out;"/>
+                <defs>
+                    <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stop-color="var(--color-green-ok)" />
+                        <stop offset="50%" stop-color="var(--accent)" />
+                        <stop offset="100%" stop-color="#ef4444" />
+                    </linearGradient>
+                </defs>
+            </svg>
+            <div class="bay-value">
+                <span data-count="4">0</span><span style="font-size:18px; color:var(--text-muted);">/6</span>
+            </div>
+        </div>
+        <div style="margin-top:20px; font-family:'Inter', sans-serif; font-weight: 600; font-size:0.8rem; color:var(--text-muted);">BAYS OCCUPIED</div>
+    </div>
+</div>
+
+<div style="display:grid; grid-template-columns: 2fr 1fr; gap:24px;">
+    <!-- Recent Jobs -->
+    <div class="glass-card stagger-3" style="padding:0; overflow:hidden;">
+        <div style="padding:20px 24px; border-bottom:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center;">
+            <h3 style="margin:0; font-size:1.1rem; color:var(--text-primary);"><i class="fas fa-clipboard-list text-accent"></i> Recent Jobs</h3>
+            <a href="/jobs" style="color:var(--accent); font-size:0.8rem; text-decoration:none; font-weight:600; letter-spacing:0.5px;">VIEW ALL</a>
+        </div>
+        <div style="overflow-x:auto;">
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr>
+                        <th>Job #</th>
+                        <th>Vehicle</th>
+                        <th>Customer</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for job in recent_jobs[:5] %}
+                    <tr>
+                        <td style="font-family: 'Inter', sans-serif; font-weight: 600, monospace;">#{{ job.id }}</td>
+                        <td style="color:var(--text-primary); font-family: 'Inter', sans-serif; font-weight: 600, monospace;">{{ job.vehicle.license_plate }}</td>
+                        <td>{{ job.customer.name }}</td>
+                        <td>
+                            {% set status_class = 'status-default' %}
+                            {% if job.status == 'Received' %}{% set status_class = 'status-received' %}{% endif %}
+                            {% if job.status == 'Diagnosing' %}{% set status_class = 'status-diagnosing' %}{% endif %}
+                            {% if job.status == 'In Progress' %}{% set status_class = 'status-progress' %}{% endif %}
+                            {% if job.status == 'Quality Check' %}{% set status_class = 'status-quality' %}{% endif %}
+                            {% if job.status == 'Ready' %}{% set status_class = 'status-ready' %}{% endif %}
+                            <span class="status-badge {{ status_class }}">{{ job.status|upper }}</span>
+                        </td>
+                        <td>
+                            <a href="/jobs/{{ job.id }}" style="color:var(--accent); margin-right:10px; padding: 6px; border-radius: 6px; background: rgba(168,85,247,0.1);"><i class="fas fa-eye"></i></a>
+                            <a href="/jobs/{{ job.id }}/edit" style="color:var(--text-muted); padding: 6px; border-radius: 6px; background: rgba(255,255,255,0.05);"><i class="fas fa-pencil-alt"></i></a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="5" style="text-align:center; padding: 40px; color: var(--text-muted);">No recent jobs found.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <div style="display:flex; flex-direction:column; gap:24px;">
+        <!-- Top Customers Insights -->
+        <div class="glass-card stagger-4">
+            <h3 style="margin:0 0 15px 0; font-size:1.1rem; color:var(--text-primary);"><i class="fas fa-crown" style="color: #fbbf24;"></i> Top Customers</h3>
+            <div style="display:flex; flex-direction:column; gap:12px;">
+                {% for row in top_customers %}
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div style="display:flex; align-items:center; gap: 10px;">
+                        <div style="width: 30px; height: 30px; border-radius: 50%; background: rgba(168,85,247,0.1); color: var(--accent); display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.8rem;">
+                            {{ loop.index }}
+                        </div>
+                        <div>
+                            <div style="color:var(--text-primary); font-weight: 500; font-size: 0.9rem;">{{ row.Customer.name }}</div>
+                        </div>
+                    </div>
+                    <div style="color:var(--color-green-ok); font-weight: 600; font-size: 0.9rem;">
+                        ₹{{ "{:,.0f}".format(row.total_spent) }}
+                    </div>
+                </div>
+                {% else %}
+                <div style="color:var(--text-muted); font-size:0.9rem; text-align: center; padding: 20px;">No invoice data yet.</div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <!-- Top Vehicles Insights -->
+        <div class="glass-card stagger-4">
+            <h3 style="margin:0 0 15px 0; font-size:1.1rem; color:var(--text-primary);"><i class="fas fa-medal" style="color: #60a5fa;"></i> Top Vehicles</h3>
+            <div style="display:flex; flex-direction:column; gap:12px;">
+                {% for row in top_vehicles %}
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div style="display:flex; align-items:center; gap: 10px;">
+                        <div style="width: 30px; height: 30px; border-radius: 8px; background: rgba(59,130,246,0.1); color: #3b82f6; display: flex; align-items: center; justify-content: center; font-size: 0.8rem;"><i class="fas fa-car"></i></div>
+                        <div>
+                            <div style="color:var(--text-primary); font-family: 'Inter', sans-serif; font-weight: 600, monospace; font-size: 0.9rem;">{{ row.Vehicle.license_plate }}</div>
+                        </div>
+                    </div>
+                    <div style="color:var(--text-muted); font-size: 0.8rem;">
+                        <span style="color: var(--text-primary); font-weight: 600;">{{ row.service_count }}</span> visits
+                    </div>
+                </div>
+                {% else %}
+                <div style="color:var(--text-muted); font-size:0.9rem; text-align: center; padding: 20px;">No service data yet.</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // Parse dynamic JSON data directly formatted from Python backend
+    const labels = JSON.parse(`{{ chart_labels|tojson|safe }}`);
+    const dataPoints = JSON.parse(`{{ revenue_data|tojson|safe }}`);
+    
+    // Render Revenue Chart
+    const ctx = document.getElementById('revenueChart');
+    if(ctx) {
+        new Chart(ctx, {
+            type: 'line', // Swapped to line chart for tension
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Revenue',
+                    data: dataPoints,
+                    backgroundColor: 'rgba(168, 85, 247, 0.15)',
+                    borderColor: '#a855f7',
+                    borderWidth: 2,
+                    pointBackgroundColor: '#1a0030',
+                    pointBorderColor: '#a855f7',
+                    pointBorderWidth: 2,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    fill: true,
+                    tension: 0.4 // Smooth curves as requested
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: 'rgba(10,0,20,0.9)',
+                        titleFont: { family: 'Poppins' },
+                        bodyFont: { family: 'Inter' },
+                        borderColor: '#a855f7',
+                        borderWidth: 1,
+                        padding: 12,
+                        callbacks: {
+                            label: function(context) {
+                                // Format as Currency
+                                return '₹' + new Intl.NumberFormat('en-IN').format(context.parsed.y);
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        suggestedMax: Math.max(...dataPoints, 10000) * 1.2, // dynamic padding
+                        grid: { color: 'rgba(255,255,255,0.04)', drawBorder: false },
+                        ticks: { 
+                            color: 'rgba(255,255,255,0.45)', 
+                            font: { family: 'Inter', size: 11 },
+                            callback: function(value) {
+                                return '₹' + new Intl.NumberFormat('en-IN', { notation: "compact", compactDisplay: "short" }).format(value);
+                            }
+                        }
+                    },
+                    x: {
+                        grid: { display: false, drawBorder: false },
+                        ticks: { color: 'rgba(255,255,255,0.45)', font: { family: 'Inter', size: 11 } }
+                    }
+                },
+                interaction: {
+                    intersect: false,
+                    mode: 'index',
+                },
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

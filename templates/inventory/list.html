@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block title %}Inventory | GMS{% endblock %}
+{% block page_title %}PARTS INVENTORY{% endblock %}
+
+{% block content %}
+<div class="panel-metal" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:15px;">
+    <form method="GET" action="{{ url_for('inventory.list_inventory') }}" style="display:flex; gap:10px; max-width:500px;">
+        <select name="category" class="input-engraved" style="width:250px;">
+            <option value="">-- ALL CATEGORIES --</option>
+            {% for cat in categories %}
+            <option value="{{ cat }}" {% if selected_category == cat %}selected{% endif %}>{{ cat | upper }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit" class="btn-metal"><i class="fas fa-filter"></i> FILTER</button>
+        {% if selected_category %}
+        <a href="{{ url_for('inventory.list_inventory') }}" class="btn-metal" style="color:var(--color-text-muted);"><i class="fas fa-times"></i></a>
+        {% endif %}
+    </form>
+    
+    {% if current_user.role in ['Admin', 'Mechanic'] %}
+    <a href="{{ url_for('inventory.add') }}" class="btn-metal"><i class="fas fa-plus"></i> ADD PART</a>
+    {% endif %}
+</div>
+
+<div class="panel-metal" style="padding:0;">
+    {% if items %}
+    <table>
+        <thead>
+            <tr>
+                <th>PART DETAILS</th>
+                <th>SUPPLIER</th>
+                <th style="width:250px;">STOCK LEVEL</th>
+                <th style="text-align:right;">PRICE (USD)</th>
+                {% if current_user.role in ['Admin', 'Mechanic'] %}
+                <th style="text-align:right;">ACTIONS</th>
+                {% endif %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in items %}
+            <tr>
+                <td>
+                    <div style="color:var(--color-gold); font-family:'Poppins', sans-serif; font-weight: 500, sans-serif; font-size:1.1rem; margin-bottom:5px;">
+                        {% if item.quantity <= item.reorder_level %}
+                        <i class="fas fa-exclamation-triangle text-red" title="Low Stock"></i>
+                        {% endif %}
+                        {{ item.part_name }}
+                    </div>
+                    <div><span style="color:#666;">PN:</span> <span style="font-family:'Inter', sans-serif; font-weight: 600;">{{ item.part_number or 'N/A' }}</span></div>
+                    <div style="font-size:0.8rem; color:var(--color-blue-info); margin-top:3px;"><i class="fas fa-tag"></i> {{ item.category }}</div>
+                </td>
+                <td>
+                    <div style="font-family:'Inter', sans-serif; font-weight: 600;">{{ item.supplier or '---' }}</div>
+                </td>
+                <td>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:5px; font-family:'Inter', sans-serif; font-weight: 600;">
+                        <span>QTY: {{ item.quantity }}</span>
+                        <span style="color:#666;">MIN: {{ item.reorder_level }}</span>
+                    </div>
+                    <!-- SVG Stock Meter -->
+                    {% set max_qty = item.reorder_level * 4 %}
+                    {% set max_qty = max_qty if max_qty > item.quantity * 1.5 else item.quantity * 1.5 %}
+                    {% set max_qty = max_qty if max_qty > 0 else 1 %}
+                    {% set calc_pct = (item.quantity / max_qty) * 100 %}
+                    {% set fill_pct = calc_pct if calc_pct <= 100 else 100 %}
+                    <svg width="100%" height="14" style="background:var(--color-bg-deep); border-radius:7px; border:1px solid #333; box-shadow:inset 2px 2px 5px #0a0a0a; display:block;">
+                        <defs>
+                            <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" stop-color="#b8860b" />
+                                <stop offset="100%" stop-color="var(--color-gold)" />
+                            </linearGradient>
+                            <linearGradient id="redGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" stop-color="#8b0000" />
+                                <stop offset="100%" stop-color="var(--color-red-alert)" />
+                            </linearGradient>
+                        </defs>
+                        <rect x="0" y="0" width="{{ fill_pct }}%" height="14" fill="{% if item.quantity <= item.reorder_level %}url(#redGrad){% else %}url(#goldGrad){% endif %}"></rect>
+                    </svg>
+                </td>
+                <td style="text-align:right;">
+                    <div style="font-family:'Inter', sans-serif; font-weight: 600; font-size:1.2rem; color:var(--color-chrome);">${{ "%.2f"|format(item.unit_price) }}</div>
+                </td>
+                {% if current_user.role in ['Admin', 'Mechanic'] %}
+                <td style="text-align:right; gap:5px; white-space:nowrap;">
+                    <!-- Restock Mini Form AJAX -->
+                    <div style="display:inline-flex; align-items:center; background:#111; padding:2px; border:1px solid #333; border-radius:4px; margin-right:5px;">
+                        <input type="number" id="qty-add-{{ item.id }}" min="1" value="1" style="width:40px; background:none; border:none; color:var(--color-chrome); padding:5px; font-family:'Inter', sans-serif; font-weight: 600; outline:none; text-align:center;">
+                        <button onclick="restockItem('{{ item.id }}')" class="btn-metal btn-small" style="padding:5px 8px; border-radius:0 3px 3px 0;" title="Quick Restock"><i class="fas fa-boxes"></i></button>
+                    </div>
+                    <a href="{{ url_for('inventory.edit', id=item.id) }}" class="btn-metal btn-small"><i class="fas fa-edit"></i></a>
+                </td>
+                {% endif %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div style="padding:30px; text-align:center; color:var(--color-text-muted); font-family:'Inter', sans-serif; font-weight: 600;">
+        <i class="fas fa-box-open" style="font-size:3rem; margin-bottom:15px; color:#444;"></i>
+        <p>NO INVENTORY MATCHES CATEGORY.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function restockItem(id) {
+    const qtyInput = document.getElementById(`qty-add-${id}`);
+    const qty = qtyInput.value;
+    
+    if(qty <= 0) {
+        showToast("Invalid quantity.", "error");
+        return;
+    }
+    
+    try {
+        const formData = new FormData();
+        formData.append('quantity', qty);
+        
+        const res = await fetchWithCSRF(`/inventory/${id}/restock`, {
+            method: 'POST',
+            body: formData
+        });
+        
+        const data = await res.json();
+        
+        if(data.success) {
+            showToast(data.message, "success");
+            setTimeout(() => window.location.reload(), 1000);
+        } else {
+            showToast(data.message, "error");
+        }
+    } catch(err) {
+        console.error(err);
+        showToast("Network error. Could not reach server.", "error");
+    }
+}
+</script>
+{% endblock %}

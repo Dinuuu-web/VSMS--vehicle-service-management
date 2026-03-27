@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block title %}Vehicle Form | GMS{% endblock %}
+{% block page_title %}{{ 'EDIT VEHICLE' if vehicle else 'REGISTER NEW VEHICLE' }}{% endblock %}
+
+{% block content %}
+<div class="panel-metal" style="max-width:700px; margin:0 auto;">
+    <form method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+        
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+            
+            <div class="form-group" style="grid-column: 1 / -1;">
+                <label><i class="fas fa-user-circle text-gold"></i> REGISTERED OWNER *</label>
+                <select name="customer_id" class="input-engraved" required>
+                    <option value="">-- SELECT CUSTOMER --</option>
+                    {% for c in customers %}
+                    <option value="{{ c.id }}" {% if (vehicle and vehicle.customer_id == c.id) or (selected_customer|string == c.id|string) %}selected{% endif %}>
+                        CST-{{ "%04d" | format(c.id) }} | {{ c.name }} ({{ c.phone }})
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-group" style="grid-column: 1 / -1; border-top:1px solid #333; margin-top:10px; padding-top:20px;">
+                <label><i class="fas fa-barcode text-gold"></i> LICENSE PLATE / REGISTRATION *</label>
+                <input type="text" name="license_plate" class="input-engraved" value="{{ vehicle.license_plate if vehicle else '' }}" style="font-size:1.5rem; letter-spacing:3px; text-transform:uppercase;" required>
+            </div>
+
+            <div class="form-group">
+                <label>MAKE *</label>
+                <input type="text" name="make" class="input-engraved" value="{{ vehicle.make if vehicle else '' }}" required placeholder="e.g. Toyota">
+            </div>
+            
+            <div class="form-group">
+                <label>MODEL *</label>
+                <input type="text" name="model" class="input-engraved" value="{{ vehicle.model if vehicle else '' }}" required placeholder="e.g. Camry">
+            </div>
+            
+            <div class="form-group">
+                <label>YEAR</label>
+                <input type="number" name="year" class="input-engraved" value="{{ vehicle.year if vehicle else '' }}" min="1900" max="2100">
+            </div>
+            
+            <div class="form-group">
+                <label>COLOR</label>
+                <input type="text" name="color" class="input-engraved" value="{{ vehicle.color if vehicle else '' }}">
+            </div>
+            
+            <div class="form-group" style="grid-column: 1 / -1;">
+                <label><i class="fas fa-fingerprint text-gold"></i> VIN (VEHICLE IDENTIFICATION NUMBER)</label>
+                <input type="text" name="vin" class="input-engraved" value="{{ vehicle.vin if vehicle else '' }}" style="text-transform:uppercase;">
+            </div>
+
+            <div class="form-group" style="grid-column: 1 / -1;">
+                <label><i class="fas fa-tachometer-alt text-gold"></i> CURRENT ODOMETER (KM)</label>
+                <input type="number" name="mileage" class="input-engraved" value="{{ vehicle.mileage if vehicle else '' }}" min="0">
+            </div>
+        </div>
+        
+        <div style="margin-top:25px; display:flex; justify-content:space-between; border-top:1px solid #333; padding-top:20px;">
+            <a href="{{ url_for('vehicles.list_vehicles') }}" class="btn-metal" style="color:var(--color-text-muted);"><i class="fas fa-times"></i> CANCEL</a>
+            <button type="submit" class="btn-metal" style="color:var(--color-green-ok); border-color:var(--color-green-ok);">
+                <i class="fas fa-save"></i> {{ 'UPDATE DIRECTIVE' if vehicle else 'INITIALIZE VEHICLE' }}
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

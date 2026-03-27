@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vehicle Status Tracking | GMS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&family=Rajdhani:wght@400;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
+    <style>
+        body {
+            background-image: radial-gradient(circle at 50% 50%, #1a1a2e 0%, #0a0a14 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .tracker-card {
+            background: linear-gradient(145deg, #1e1e1e, #141414);
+            border: 2px solid var(--color-chrome);
+            border-radius: 8px;
+            padding: 30px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.8), inset 0 0 15px rgba(255,255,255,0.05);
+        }
+        .brand-header {
+            text-align: center;
+            border-bottom: 2px solid var(--color-gold);
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .status-pipeline {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            position: relative;
+        }
+        .status-pipeline::before {
+            content: '';
+            position: absolute;
+            left: 19px;
+            top: 10px;
+            bottom: 10px;
+            width: 2px;
+            background: #333;
+            z-index: 1;
+        }
+        .pipeline-step {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            z-index: 2;
+            opacity: 0.4;
+            transition: all 0.3s ease;
+        }
+        .pipeline-step.completed {
+            opacity: 1;
+        }
+        .pipeline-step.completed .step-icon {
+            background: var(--color-green-ok);
+            border-color: var(--color-green-ok);
+            box-shadow: 0 0 10px var(--color-green-ok);
+        }
+        .pipeline-step.current {
+            opacity: 1;
+            transform: scale(1.05);
+        }
+        .pipeline-step.current .step-icon {
+            background: var(--color-gold);
+            border-color: var(--color-gold);
+            box-shadow: 0 0 15px var(--color-gold);
+            animation: pulse-glow 2s infinite;
+        }
+        .step-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #222;
+            border: 2px solid #555;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+        .step-text {
+            font-family: 'Poppins', sans-serif; font-weight: 500, sans-serif;
+            font-size: 1.2rem;
+            color: var(--color-chrome);
+        }
+        @keyframes pulse-glow {
+            0% { box-shadow: 0 0 5px var(--color-gold); }
+            50% { box-shadow: 0 0 20px var(--color-gold); }
+            100% { box-shadow: 0 0 5px var(--color-gold); }
+        }
+        .vehicle-meta {
+            font-family: 'Inter', sans-serif; font-weight: 600, monospace;
+            background: #000;
+            border: 1px solid #333;
+            padding: 15px;
+            margin-bottom: 25px;
+            border-radius: 4px;
+            color: var(--color-gold);
+            font-size: 1.1rem;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="tracker-card">
+        <div class="brand-header">
+            <h1 style="color:var(--color-chrome); font-family:'Poppins', sans-serif; font-weight: 500; margin:0; letter-spacing:3px;">
+                <i class="fas fa-wrench text-gold"></i> GMS
+            </h1>
+            <div style="font-family:'Inter', sans-serif; font-weight: 600; color:var(--color-text-muted); margin-top:5px; letter-spacing:2px;">LIVE SERVICE TRACKER</div>
+        </div>
+
+        <div class="vehicle-meta">
+            <div>WO-{{ "%04d" | format(job.id) }}</div>
+            <div style="color:var(--color-chrome); margin-top:5px; font-size:1.3rem;">{{ job.vehicle.license_plate }}</div>
+            <div style="color:#888; font-size:0.9rem;">{{ job.vehicle.make }} {{ job.vehicle.model }}</div>
+        </div>
+
+        <div class="status-pipeline">
+            {% set statuses = ['Received', 'Diagnosing', 'In Progress', 'Quality Check', 'Ready', 'Delivered'] %}
+            {% set current_index = statuses.index(job.status) if job.status in statuses else 0 %}
+            
+            {% for s in statuses %}
+                <div class="pipeline-step {% if loop.index0 < current_index %}completed{% elif loop.index0 == current_index %}current{% endif %}">
+                    <div class="step-icon">
+                        {% if loop.index0 < current_index %}
+                            <i class="fas fa-check"></i>
+                        {% elif loop.index0 == current_index %}
+                            <i class="fas fa-cog fa-spin"></i>
+                        {% else %}
+                            <i class="fas fa-circle" style="font-size:0.5rem;"></i>
+                        {% endif %}
+                    </div>
+                    <div class="step-text">{{ s | upper }}</div>
+                </div>
+            {% endfor %}
+        </div>
+        
+        <div style="margin-top:40px; text-align:center; font-family:'Inter', sans-serif; font-weight: 600; color:#666; font-size:0.9rem;">
+            Thank you for choosing GMS. Real-time updates active.
+        </div>
+    </div>
+
+</body>
+</html>

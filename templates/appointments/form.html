@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}Book Appointment | GMS{% endblock %}
+{% block page_title %}NEW SERVICE CONFIGURATION{% endblock %}
+
+{% block content %}
+<div class="panel-metal" style="max-width:600px; margin:0 auto;">
+    <form method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+        
+        <div style="display:grid; grid-template-columns:1fr; gap:20px;">
+            <div class="form-group">
+                <label><i class="fas fa-user-circle text-gold"></i> CLIENT SELECT *</label>
+                <!-- Simplified for demonstration, actual app should probably lazy-load vehicles after selecting customer -->
+                <select name="customer_id" class="input-engraved" required>
+                    <option value="">-- SELECT CLIENT --</option>
+                    {% for c in customers %}
+                    <option value="{{ c.id }}">CST-{{ "%04d" | format(c.id) }} | {{ c.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label><i class="fas fa-car text-gold"></i> VEHICLE SELECT *</label>
+                <select name="vehicle_id" class="input-engraved" required>
+                    <option value="">-- SELECT VEHICLE --</option>
+                    {% for v in vehicles %}
+                    <option value="{{ v.id }}">{{ v.license_plate }} ({{ v.make }} {{ v.model }}) - Own: {{ v.customer.name }}</option>
+                    {% endfor %}
+                </select>
+                <div style="font-size:0.8rem; color:var(--color-text-muted); margin-top:5px;">Note: In production, this field auto-filters by client.</div>
+            </div>
+            
+            <div class="form-group" style="border-top:1px solid #333; margin-top:10px; padding-top:20px;">
+                <label><i class="fas fa-calendar-alt text-gold"></i> SCHEDULED DATE & TIME *</label>
+                <input type="datetime-local" name="scheduled_at" class="input-engraved" required style="font-family:'Inter', sans-serif; font-weight: 600;">
+            </div>
+            
+            <div class="form-group">
+                <label><i class="fas fa-wrench text-gold"></i> REQUESTED SERVICE TYPE / CATEGORY</label>
+                <input type="text" name="service_type" class="input-engraved" placeholder="e.g. Full Service, Oil Change">
+            </div>
+
+            <div class="form-group">
+                <label><i class="fas fa-sticky-note text-gold"></i> OPERATION NOTES</label>
+                <textarea name="notes" class="input-engraved" rows="3" placeholder="Symptoms or specific requests..."></textarea>
+            </div>
+        </div>
+        
+        <div style="margin-top:25px; display:flex; justify-content:space-between; border-top:1px solid #333; padding-top:20px;">
+            <a href="{{ url_for('appointments.index') }}" class="btn-metal" style="color:var(--color-text-muted);"><i class="fas fa-times"></i> ABORT</a>
+            <button type="submit" class="btn-metal" style="color:var(--color-green-ok); border-color:var(--color-green-ok);">
+                <i class="fas fa-check-circle"></i> INITIALIZE BOOKING
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

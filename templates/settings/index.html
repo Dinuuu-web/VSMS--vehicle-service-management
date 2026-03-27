@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% block title %}Settings - VSMS{% endblock %}
+{% block page_title %}System Settings{% endblock %}
+
+{% block content %}
+<div class="glass-card fade-in">
+    <div style="display:flex; border-bottom:1px solid var(--border-color); margin-bottom:20px;">
+        <button class="btn-metal" style="border-radius:0; border:none; border-bottom:2px solid var(--accent); background:var(--accent-glow); margin-right:10px;">GARAGE PROFILE</button>
+        <button class="btn-metal" style="border-radius:0; border:none; background:transparent; color:var(--text-muted); margin-right:10px;" onclick="window.location.href='#account'">ACCOUNT</button>
+    </div>
+
+    <form method="POST" action="{{ url_for('settings.index') }}" enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+        <input type="hidden" name="action" value="garage_profile">
+        
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+            <div>
+                <label style="font-family:'Inter', sans-serif; font-weight: 600; color:var(--text-muted); font-size:0.8rem;">GARAGE NAME</label>
+                <input type="text" name="garage_name" class="input-engraved" value="{{ garage.garage_name }}" required>
+            </div>
+            <div>
+                <label style="font-family:'Inter', sans-serif; font-weight: 600; color:var(--text-muted); font-size:0.8rem;">TAGLINE</label>
+                <input type="text" name="tagline" class="input-engraved" value="{{ garage.tagline }}">
+            </div>
+            <div>
+                <label style="font-family:'Inter', sans-serif; font-weight: 600; color:var(--text-muted); font-size:0.8rem;">PHONE</label>
+                <input type="text" name="phone" class="input-engraved" value="{{ garage.phone }}">
+            </div>
+            <div>
+                <label style="font-family:'Inter', sans-serif; font-weight: 600; color:var(--text-muted); font-size:0.8rem;">EMAIL</label>
+                <input type="email" name="email" class="input-engraved" value="{{ garage.email }}">
+            </div>
+            <div>
+                <label style="font-family:'Inter', sans-serif; font-weight: 600; color:var(--text-muted); font-size:0.8rem;">GST NUMBER</label>
+                <input type="text" name="gst_number" class="input-engraved" value="{{ garage.gst_number }}">
+            </div>
+            <div>
+                <label style="font-family:'Inter', sans-serif; font-weight: 600; color:var(--text-muted); font-size:0.8rem;">TOTAL BAYS</label>
+                <input type="number" name="total_bays" class="input-engraved" value="{{ garage.total_bays }}">
+            </div>
+            <div style="grid-column: span 2;">
+                <label style="font-family:'Inter', sans-serif; font-weight: 600; color:var(--text-muted); font-size:0.8rem;">ADDRESS</label>
+                <input type="text" name="address" class="input-engraved" value="{{ garage.address }}">
+            </div>
+            <div>
+                <label style="font-family:'Inter', sans-serif; font-weight: 600; color:var(--text-muted); font-size:0.8rem;">CURRENCY SYMBOL</label>
+                <input type="text" name="currency_symbol" class="input-engraved" value="{{ garage.currency_symbol }}">
+            </div>
+            <div>
+                <label style="font-family:'Inter', sans-serif; font-weight: 600; color:var(--text-muted); font-size:0.8rem;">WORKING HOURS</label>
+                <input type="text" name="working_hours" class="input-engraved" value="{{ garage.working_hours }}">
+            </div>
+        </div>
+        
+        <div style="margin-top:20px; text-align:right;">
+            {% if current_user.role == 'Admin' %}
+            <button type="submit" class="btn-metal"><i class="fas fa-save"></i> SAVE PROFILE</button>
+            {% else %}
+            <span style="color:var(--text-muted); font-size:0.8rem;">Only Admin can update garage profile.</span>
+            {% endif %}
+        </div>
+    </form>
+</div>
+
+<div class="glass-card fade-in" id="account" style="margin-top:20px;">
+    <h3 style="margin-top:0; font-family:'Poppins', sans-serif; font-weight: 500; color:var(--accent); border-bottom:1px solid var(--border-color); padding-bottom:10px;">MY ACCOUNT</h3>
+    
+    <form method="POST" action="{{ url_for('settings.index') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+        <input type="hidden" name="action" value="account">
+        
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+            <div>
+                <label style="font-family:'Inter', sans-serif; font-weight: 600; color:var(--text-muted); font-size:0.8rem;">EMAIL</label>
+                <input type="email" name="email" class="input-engraved" value="{{ current_user.email }}">
+            </div>
+            <div>
+                <label style="font-family:'Inter', sans-serif; font-weight: 600; color:var(--text-muted); font-size:0.8rem;">NEW PASSWORD (leave blank to keep current)</label>
+                <input type="password" name="password" class="input-engraved">
+            </div>
+            <div>
+                <label style="font-family:'Inter', sans-serif; font-weight: 600; color:var(--text-muted); font-size:0.8rem;">SECURITY QUESTION</label>
+                <select name="security_question" class="input-engraved">
+                    <option value="{{ current_user.security_question }}" selected>{{ current_user.security_question or 'Select a question' }}</option>
+                    <option value="What is your pet's name?">What is your pet's name?</option>
+                    <option value="What is your mother's maiden name?">What is your mother's maiden name?</option>
+                    <option value="What city were you born in?">What city were you born in?</option>
+                    <option value="What is your favorite color?">What is your favorite color?</option>
+                    <option value="What was your first school name?">What was your first school name?</option>
+                </select>
+            </div>
+            <div>
+                <label style="font-family:'Inter', sans-serif; font-weight: 600; color:var(--text-muted); font-size:0.8rem;">NEW SECURITY ANSWER</label>
+                <input type="text" name="security_answer" class="input-engraved">
+            </div>
+        </div>
+        
+        <div style="margin-top:20px; text-align:right;">
+            <button type="submit" class="btn-metal"><i class="fas fa-save"></i> SAVE ACCOUNT</button>
+        </div>
+    </form>
+</div>
+
+<div class="glass-card fade-in" style="margin-top:20px;">
+    <h3 style="margin-top:0; font-family:'Poppins', sans-serif; font-weight: 500; color:var(--accent); border-bottom:1px solid var(--border-color); padding-bottom:10px;">ABOUT</h3>
+    <div style="color:var(--text-primary); font-family:'Rajdhani'; line-height:1.6;">
+        <strong>Project:</strong> Vehicle Service Management System (VSMS)<br>
+        <strong>Version:</strong> 1.0.0<br>
+        <strong>Developed by:</strong> Dinbandhu Choudhary & Aditya Hardas<br>
+        <strong>Year:</strong> 2026<br>
+        <strong>Type:</strong> College Mini Project | Full Stack Web Development<br>
+        <strong>License:</strong> MIT
+    </div>
+</div>
+{% endblock %}

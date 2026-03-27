@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - VSMS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700&family=Poppins:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <style>
+        .strength-bar { height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; margin-top: 5px; overflow: hidden; }
+        .strength-fill { height: 100%; width: 0%; transition: all 0.3s; }
+        .score-0 { width: 0%; background: transparent; }
+        .score-1 { width: 25%; background: var(--color-red-alert, #ef4444); }
+        .score-2 { width: 50%; background: #f59e0b; }
+        .score-3 { width: 75%; background: #3b82f6; }
+        .score-4 { width: 100%; background: var(--color-green-ok, #22c55e); }
+    </style>
+</head>
+<body>
+
+    <div id="toast-container" class="toast-container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div class="toast {{ category }}">
+                    <i class="fas fa-{{ 'check-circle' if category == 'success' else 'exclamation-circle' if category == 'error' else 'info-circle' }}" style="margin-right:10px;"></i>
+                    {{ message }}
+                </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <div class="auth-bg">
+      <div class="particles-container"></div>
+      
+      <div class="auth-card fade-in stagger-1" style="width: 500px; padding-top: 30px; padding-bottom: 30px;">
+        <div class="auth-logo" style="margin-bottom:20px;">
+          <h1 style="font-size:2rem;">VSMS REGISTRATION</h1>
+        </div>
+        
+        <form method="POST" action="{{ url_for('auth.register') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; margin-bottom:15px;">
+              <div>
+                <label style="font-family:'Inter', sans-serif; font-weight: 600; color:var(--text-muted); font-size:0.8rem;">USERNAME</label>
+                <input type="text" name="username" class="input-engraved" required placeholder="JohnDoe">
+              </div>
+              <div>
+                <label style="font-family:'Inter', sans-serif; font-weight: 600; color:var(--text-muted); font-size:0.8rem;">EMAIL</label>
+                <input type="email" name="email" class="input-engraved" required placeholder="john@example.com">
+              </div>
+          </div>
+          
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; margin-bottom:15px;">
+              <div>
+                <label style="font-family:'Inter', sans-serif; font-weight: 600; color:var(--text-muted); font-size:0.8rem;">ROLE</label>
+                <select name="role" class="input-engraved" required>
+                    <option value="Mechanic">Mechanic</option>
+                    <option value="Receptionist">Receptionist</option>
+                    <option value="Admin">Admin</option>
+                </select>
+              </div>
+          </div>
+          
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; margin-bottom:5px;">
+              <div>
+                <label style="font-family:'Inter', sans-serif; font-weight: 600; color:var(--text-muted); font-size:0.8rem;">PASSWORD</label>
+                <input type="password" id="reg-password" name="password" class="input-engraved" required>
+              </div>
+              <div>
+                <label style="font-family:'Inter', sans-serif; font-weight: 600; color:var(--text-muted); font-size:0.8rem;">CONFIRM</label>
+                <input type="password" id="reg-confirm" name="confirm" class="input-engraved" required>
+              </div>
+          </div>
+          
+          <div style="margin-bottom:20px;">
+              <div class="strength-bar"><div class="strength-fill score-0" id="strengthBar"></div></div>
+              <div id="strengthText" style="font-family:'Inter', sans-serif; font-weight: 600; font-size:0.7rem; color:var(--text-muted); text-align:right; margin-top:3px;">Enter password</div>
+              <div id="passwordMatchText" style="font-family:'Inter', sans-serif; font-weight: 600; font-size:0.7rem; color:var(--color-red-alert); display:none;">Passwords do not match</div>
+          </div>
+          
+          <div style="margin-bottom:15px;">
+            <label style="font-family:'Inter', sans-serif; font-weight: 600; color:var(--text-muted); font-size:0.8rem;">SECURITY QUESTION</label>
+            <select name="security_question" class="input-engraved" required>
+                <option value="What is your pet's name?">What is your pet's name?</option>
+                <option value="What is your mother's maiden name?">What is your mother's maiden name?</option>
+                <option value="What city were you born in?">What city were you born in?</option>
+                <option value="What is your favorite color?">What is your favorite color?</option>
+                <option value="What was your first school name?">What was your first school name?</option>
+            </select>
+          </div>
+          
+          <div style="margin-bottom:25px;">
+            <label style="font-family:'Inter', sans-serif; font-weight: 600; color:var(--text-muted); font-size:0.8rem;">SECURITY ANSWER</label>
+            <input type="text" name="security_answer" class="input-engraved" required placeholder="Answer in lowercase">
+          </div>
+          
+          <button type="submit" id="btn-register" class="btn-metal" style="width:100%; font-size:1.1rem; letter-spacing:2px; padding:12px;">REGISTER</button>
+        </form>
+        
+        <div class="auth-links" style="justify-content:center; margin-top:20px;">
+          <a href="{{ url_for('auth.login') }}"><i class="fas fa-arrow-left"></i> Back to Login</a>
+        </div>
+      </div>
+      
+      <div style="position:absolute; bottom:20px; text-align:center; width:100%; font-family:'Inter', sans-serif; font-weight: 600; font-size:0.8rem; color:rgba(255,255,255,0.3);">
+        © 2026 VSMS | Developed by Dinbandhu Choudhary & Aditya Hardas
+      </div>
+    </div>
+    
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script>
+        const pass = document.getElementById('reg-password');
+        const conf = document.getElementById('reg-confirm');
+        const bar = document.getElementById('strengthBar');
+        const txt = document.getElementById('strengthText');
+        const matchTxt = document.getElementById('passwordMatchText');
+        const btn = document.getElementById('btn-register');
+        
+        function checkStrength(password) {
+          let score = 0;
+          if (password.length >= 8) score++;
+          if (/[A-Z]/.test(password)) score++;
+          if (/[0-9]/.test(password)) score++;
+          if (/[^A-Za-z0-9]/.test(password)) score++;
+          return score; // 0-4
+        }
+        
+        function validate() {
+            const score = checkStrength(pass.value);
+            bar.className = 'strength-fill score-' + score;
+            const labels = ['Weak', 'Fair', 'Good', 'Strong', 'Excellent'];
+            txt.textContent = pass.value ? labels[score] : 'Enter password';
+            
+            const matches = pass.value === conf.value;
+            if(conf.value) {
+                matchTxt.style.display = matches ? 'none' : 'block';
+            } else {
+                matchTxt.style.display = 'none';
+            }
+            
+            btn.disabled = (!matches || score < 2);
+            btn.style.opacity = btn.disabled ? '0.5' : '1';
+        }
+        
+        pass.addEventListener('input', validate);
+        conf.addEventListener('input', validate);
+    </script>
+</body>
+</html>

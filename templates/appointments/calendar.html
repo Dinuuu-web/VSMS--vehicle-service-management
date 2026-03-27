@@ -1,0 +1,214 @@
+{% extends "base.html" %}
+
+{% block title %}Appointments | GMS{% endblock %}
+{% block page_title %}SERVICE SCHEDULE{% endblock %}
+
+{% block extra_css %}
+<style>
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 5px;
+    margin-top: 15px;
+}
+.calendar-day-header {
+    background: linear-gradient(180deg, #2d2d2d, #1a1a1a);
+    padding: 10px;
+    text-align: center;
+    font-family: 'Poppins', sans-serif; font-weight: 500, sans-serif;
+    color: var(--color-gold);
+    border: 1px solid #333;
+}
+.calendar-day {
+    background: linear-gradient(135deg, #222, #1a1a1a);
+    border: 1px solid #333;
+    min-height: 120px;
+    padding: 10px;
+    transition: background 0.2s;
+}
+.calendar-day:hover {
+    background: #2a2a2a;
+}
+.calendar-day.empty {
+    background: #111;
+    border: 1px dashed #333;
+}
+.calendar-day.today {
+    border-color: var(--color-gold);
+    box-shadow: inset 0 0 10px rgba(192, 160, 96, 0.2);
+}
+.day-number {
+    font-family: 'Inter', sans-serif; font-weight: 600, monospace;
+    font-size: 1.2rem;
+    color: var(--color-chrome);
+    margin-bottom: 10px;
+}
+.appt-card {
+    background: #000;
+    border-left: 3px solid var(--color-blue-info);
+    padding: 5px;
+    font-size: 0.8rem;
+    font-family: 'Inter', sans-serif; font-weight: 600, monospace;
+    margin-bottom: 5px;
+    cursor: pointer;
+    box-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+    border-radius: 0 3px 3px 0;
+}
+.appt-card.Confirmed { border-left-color: var(--color-green-ok); }
+.appt-card.In-Progress { border-left-color: var(--color-gold); }
+.appt-card.Completed { border-left-color: #555; opacity: 0.6; }
+.appt-card.Cancelled { border-left-color: var(--color-red-alert); opacity: 0.5; text-decoration: line-through; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="panel-metal" style="display:flex; justify-content:space-between; align-items:center;">
+    <div style="font-family:'Poppins', sans-serif; font-weight: 500, sans-serif; font-size:1.5rem; color:var(--color-chrome);">
+        <button class="btn-metal btn-small" onclick="changeMonth(-1)"><i class="fas fa-chevron-left"></i></button>
+        <span id="monthDisplay" style="display:inline-block; width:200px; text-align:center; color:var(--color-gold);">YYYY-MM</span>
+        <button class="btn-metal btn-small" onclick="changeMonth(1)"><i class="fas fa-chevron-right"></i></button>
+    </div>
+    
+    <a href="{{ url_for('appointments.add') }}" class="btn-metal"><i class="fas fa-calendar-plus"></i> BOOK APPOINTMENT</a>
+</div>
+
+<div class="panel-metal" style="padding-top:5px;">
+    <div class="calendar-grid">
+        <div class="calendar-day-header">SUN</div>
+        <div class="calendar-day-header">MON</div>
+        <div class="calendar-day-header">TUE</div>
+        <div class="calendar-day-header">WED</div>
+        <div class="calendar-day-header">THU</div>
+        <div class="calendar-day-header">FRI</div>
+        <div class="calendar-day-header">SAT</div>
+    </div>
+    <div class="calendar-grid" id="calendarBody">
+        <!-- Rendered via JS -->
+    </div>
+</div>
+
+<!-- Modal for updating status (Simplified skeuomorph) -->
+<div id="apptModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; justify-content:center; align-items:center;">
+    <div class="panel-metal" style="width:400px; box-shadow:0 10px 30px rgba(0,0,0,0.9); border:2px solid var(--color-gold);">
+        <h3 id="modalTitle" style="margin-top:0; color:var(--color-gold); font-family:'Poppins', sans-serif; font-weight: 500;">APPOINTMENT DETAILS</h3>
+        <div id="modalContent" style="font-family:'Inter', sans-serif; font-weight: 600; margin-bottom:20px; line-height:1.5;"></div>
+        
+        <form id="statusForm" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            <select name="status" class="input-engraved" style="margin-bottom:15px;">
+                <option value="Scheduled">Scheduled</option>
+                <option value="Confirmed">Confirmed</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Completed">Completed</option>
+                <option value="Cancelled">Cancelled</option>
+            </select>
+            <div style="display:flex; justify-content:space-between;">
+                <button type="button" class="btn-metal" onclick="closeModal()">CLOSE</button>
+                <button type="submit" class="btn-metal" style="color:var(--color-green-ok); border-color:var(--color-green-ok);">UPDATE</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let currentYear = Number('{{ year }}');
+let currentMonth = Number('{{ month }}');
+
+function changeMonth(offset) {
+    currentMonth += offset;
+    if(currentMonth > 12) { currentMonth = 1; currentYear++; }
+    if(currentMonth < 1) { currentMonth = 12; currentYear--; }
+    renderCalendar();
+}
+
+const monthNames = ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"];
+
+async function renderCalendar() {
+    document.getElementById('monthDisplay').textContent = `${monthNames[currentMonth-1]} ${currentYear}`;
+    const calBody = document.getElementById('calendarBody');
+    calBody.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:50px; color:var(--color-gold);"><i class="fas fa-cog fa-spin fa-2x"></i></div>';
+    
+    try {
+        const res = await fetchWithCSRF(`/appointments/api/month?year=${currentYear}&month=${currentMonth}`);
+        const result = await res.json();
+        
+        if(!result.success) throw new Error("Failed to load");
+        
+        drawGrid(result.data);
+    } catch(err) {
+        calBody.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:20px; color:red;">DATA STREAM ERROR</div>';
+        showToast("Error loading schedule data.", "error");
+    }
+}
+
+function drawGrid(appts) {
+    const calBody = document.getElementById('calendarBody');
+    calBody.innerHTML = '';
+    
+    const firstDay = new Date(currentYear, currentMonth - 1, 1).getDay(); // 0(Sun) - 6(Sat)
+    const daysInMonth = new Date(currentYear, currentMonth, 0).getDate();
+    
+    const today = new Date();
+    const isCurrentMonth = (today.getFullYear() === currentYear && today.getMonth() === currentMonth - 1);
+    
+    // Empty boxes for start
+    for(let i=0; i<firstDay; i++) {
+        const div = document.createElement('div');
+        div.className = 'calendar-day empty';
+        calBody.appendChild(div);
+    }
+    
+    // Days
+    for(let i=1; i<=daysInMonth; i++) {
+        const div = document.createElement('div');
+        div.className = 'calendar-day';
+        if(isCurrentMonth && today.getDate() === i) div.classList.add('today');
+        
+        div.innerHTML = `<div class="day-number">${i}</div>`;
+        
+        // Find appts for this day
+        const dayAppts = appts.filter(a => {
+            const d = new Date(a.scheduled_at);
+            return d.getDate() === i;
+        });
+        
+        dayAppts.forEach(a => {
+            const apptDiv = document.createElement('div');
+            apptDiv.className = `appt-card ${a.status.replace(' ', '-')}`;
+            const time = new Date(a.scheduled_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            apptDiv.textContent = `${time} ${a.customer.split(' ')[0]}`;
+            apptDiv.onclick = () => openModal(a);
+            div.appendChild(apptDiv);
+        });
+        
+        calBody.appendChild(div);
+    }
+}
+
+function openModal(appt) {
+    const d = new Date(appt.scheduled_at);
+    document.getElementById('modalContent').innerHTML = `
+        <div style="color:#aaa;">TIME:</div>
+        <div style="margin-bottom:10px;">${d.toLocaleString()}</div>
+        <div style="color:#aaa;">CLIENT:</div>
+        <div style="margin-bottom:10px;">${appt.customer}</div>
+        <div style="color:#aaa;">VEHICLE:</div>
+        <div style="margin-bottom:10px;">${appt.vehicle}</div>
+        <div style="color:#aaa;">SERVICE:</div>
+        <div style="margin-bottom:10px;">${appt.service_type || 'N/A'}</div>
+    `;
+    document.getElementById('statusForm').action = `/appointments/${appt.id}/status`;
+    document.querySelector(`#statusForm select option[value="${appt.status}"]`).selected = true;
+    document.getElementById('apptModal').style.display = 'flex';
+}
+
+function closeModal() {
+    document.getElementById('apptModal').style.display = 'none';
+}
+
+// Initial render
+document.addEventListener('DOMContentLoaded', renderCalendar);
+</script>
+{% endblock %}

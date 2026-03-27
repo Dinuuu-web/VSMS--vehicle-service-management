@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block title %}Billing & Invoices | GMS{% endblock %}
+{% block page_title %}FINANCIAL OPERATIONS{% endblock %}
+
+{% block content %}
+<div class="glass-card" style="margin-bottom:24px;">
+    <h3 style="margin-top:0; margin-bottom: 20px; color:var(--text-primary); border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:10px;">
+        <i class="fas fa-exclamation-circle text-accent"></i> PENDING JOB INVOICES
+    </h3>
+    {% if pending_jobs %}
+    <table>
+        <thead>
+            <tr>
+                <th>WORK ORDER</th>
+                <th>CLIENT</th>
+                <th>COMPLETED ON</th>
+                <th style="text-align:right;">ACTION</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for job in pending_jobs %}
+            <tr>
+                <td style="font-family:'Inter', sans-serif; font-weight: 600, monospace; color:var(--accent);">WO-{{ "%04d" | format(job.id) }}</td>
+                <td>{{ job.customer.name }} ({{ job.vehicle.license_plate }})</td>
+                <td>{{ job.completed_at.strftime('%Y-%m-%d %H:%M') if job.completed_at else job.updated_at.strftime('%Y-%m-%d') }}</td>
+                <td style="text-align:right;">
+                    <a href="{{ url_for('billing.generate_invoice', job_id=job.id) }}" class="btn-metal btn-small"><i class="fas fa-file-invoice"></i> GENERATE DRAFT</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p style="color:var(--color-text-muted); font-family:'Inter', sans-serif; font-weight: 600;">No pending delivered jobs requiring invoices.</p>
+    {% endif %}
+</div>
+
+<div class="glass-card">
+    <div style="display:flex; justify-content:space-between; align-items:flex-end; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:15px; margin-bottom:20px;">
+        <h3 style="margin:0; color:var(--text-primary);">
+            <i class="fas fa-file-invoice-dollar text-accent"></i> INVOICE REGISTRY
+        </h3>
+        
+        <form method="GET" action="{{ url_for('billing.list_invoices') }}" style="display:flex; gap:10px; align-items:center;">
+            <div style="display:flex; flex-direction:column;">
+                <label style="font-size:0.75rem; color:var(--text-muted); margin-bottom:4px;">Start Date</label>
+                <input type="date" name="start_date" class="input-engraved" value="{{ start_date or '' }}" style="padding:6px; font-size:0.85rem; border-radius:8px;">
+            </div>
+            <div style="display:flex; flex-direction:column;">
+                <label style="font-size:0.75rem; color:var(--text-muted); margin-bottom:4px;">End Date</label>
+                <input type="date" name="end_date" class="input-engraved" value="{{ end_date or '' }}" style="padding:6px; font-size:0.85rem; border-radius:8px;">
+            </div>
+            <div style="display:flex; align-items:flex-end; padding-bottom:2px; gap:8px;">
+                <button type="submit" class="btn-metal btn-small" style="padding: 8px 16px;"><i class="fas fa-filter"></i> Filter</button>
+                {% if start_date or end_date %}
+                <a href="{{ url_for('billing.list_invoices') }}" class="btn-metal btn-small" style="padding: 8px 16px; background:rgba(239,68,68,0.1); color:#ef4444; border-color:rgba(239,68,68,0.3);"><i class="fas fa-times"></i> Clear</a>
+                {% endif %}
+                <a href="{{ url_for('billing.export_csv', start_date=start_date, end_date=end_date) }}" class="btn-metal btn-small" style="padding: 8px 16px; background:rgba(34,197,94,0.1); color:var(--color-green-ok); border-color:rgba(34,197,94,0.3);"><i class="fas fa-file-csv"></i> Export</a>
+            </div>
+        </form>
+    </div>
+    {% if invoices %}
+    <table>
+        <thead>
+            <tr>
+                <th>INVOICE #</th>
+                <th>WORK ORDER</th>
+                <th>AMOUNT</th>
+                <th>STATUS</th>
+                <th style="text-align:right;">ACTIONS</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for inv in invoices %}
+            <tr>
+                <td style="font-family:'Inter', sans-serif; font-weight: 600, monospace; color:var(--text-primary);">INV-{{ "%05d" | format(inv.id) }}</td>
+                <td style="font-family:'Inter', sans-serif; font-weight: 600, monospace;"><a href="/jobs/{{ inv.job_card_id }}" style="color:var(--accent);">WO-{{ "%04d" | format(inv.job_card_id) }}</a></td>
+                <td style="font-family:'Inter', sans-serif; font-weight: 600, monospace; color:var(--color-green-ok);">₹{{ "{:,.2f}".format(inv.total) }}</td>
+                <td>
+                    {% if inv.payment_status == 'Paid' %}
+                    <span style="background:rgba(34,197,94,0.1); color:var(--color-green-ok); border: 1px solid var(--color-green-ok); padding:4px 8px; border-radius:12px; font-size:0.7rem; font-family:'Inter', sans-serif; font-weight:600; letter-spacing:0.5px;">PAID</span>
+                    {% else %}
+                    <span style="background:rgba(239,68,68,0.1); color:#ef4444; border: 1px solid #ef4444; padding:4px 8px; border-radius:12px; font-size:0.7rem; font-family:'Inter', sans-serif; font-weight:600; letter-spacing:0.5px;">UNPAID</span>
+                    {% endif %}
+                </td>
+                <td style="text-align:right;">
+                    <a href="{{ url_for('billing.view_invoice', id=inv.id) }}" class="btn-metal btn-small"><i class="fas fa-eye"></i> VIEW</a>
+                    <a href="{{ url_for('billing.download_pdf', id=inv.id) }}" class="btn-metal btn-small"><i class="fas fa-download"></i> PDF</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div style="padding:30px; text-align:center; color:var(--color-text-muted); font-family:'Inter', sans-serif; font-weight: 600;">
+        <i class="fas fa-receipt" style="font-size:3rem; margin-bottom:15px; color:#444;"></i>
+        <p>NO INVOICES GENERATED YET.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

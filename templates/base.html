@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}VSMS - Vehicle Service Management System{% endblock %}</title>
+    <!-- CSRF Token -->
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link crossorigin href="https://fonts.gstatic.com" rel="preconnect">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Core CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    {% block extra_css %}{% endblock %}
+    
+    <!-- Apply theme from localStorage early to avoid flash -->
+    <script>
+      const savedTheme = localStorage.getItem('vsms-theme');
+      if (savedTheme) document.documentElement.setAttribute('data-theme', savedTheme);
+    </script>
+</head>
+<body>
+    
+    <div id="toast-container" class="toast-container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div class="toast {{ category }}">
+                    <i class="fas fa-{{ 'check-circle' if category == 'success' else 'exclamation-circle' if category == 'error' else 'info-circle' }}" style="margin-right:10px;"></i>
+                    {{ message }}
+                </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-logo">
+            <div class="gear-container" style="font-size:2rem; margin-bottom: 5px;">
+                <i class="fas fa-cog gear-main"></i>
+            </div>
+            <div style="font-family:'Poppins', sans-serif; font-weight: 500; letter-spacing:2px;">VSMS</div>
+            <div style="font-size: 0.65rem; color:var(--text-muted); font-family:'Inter', sans-serif; font-weight: 600;">Smart Service.</div>
+            <div style="height:2px; width:40px; background:var(--accent); margin: 8px auto 0;"></div>
+        </div>
+        
+        <nav style="flex-grow:1; display:flex; flex-direction:column; padding:20px 0; overflow-y:auto; overflow-x:hidden;">
+            <a href="/dashboard" class="nav-item fade-in stagger-1 {% if request.path.startswith('/dashboard') %}active{% endif %}">
+                <i class="fas fa-home"></i> <span>Dashboard</span>
+            </a>
+            <a href="/customers" class="nav-item fade-in stagger-1 {% if request.path.startswith('/customers') %}active{% endif %}">
+                <i class="fas fa-users"></i> <span>Customers</span>
+            </a>
+            <a href="/vehicles" class="nav-item fade-in stagger-1 {% if request.path.startswith('/vehicles') %}active{% endif %}">
+                <i class="fas fa-car"></i> <span>Vehicles</span>
+            </a>
+            <a href="/jobs/kanban" class="nav-item fade-in stagger-2 {% if request.path.startswith('/jobs') %}active{% endif %}">
+                <i class="fas fa-clipboard-check"></i> <span>Job Cards</span>
+            </a>
+            <a href="/inspections" class="nav-item fade-in stagger-2 {% if request.path.startswith('/inspections') %}active{% endif %}">
+                <i class="fas fa-search"></i> <span>Inspections</span>
+            </a>
+            <a href="/inventory" class="nav-item fade-in stagger-2 {% if request.path.startswith('/inventory') %}active{% endif %}">
+                <i class="fas fa-box"></i> <span>Inventory</span>
+            </a>
+            <a href="/appointments" class="nav-item fade-in stagger-2 {% if request.path.startswith('/appointments') %}active{% endif %}">
+                <i class="fas fa-calendar-alt"></i> <span>Appointments</span>
+            </a>
+            
+            {% if current_user.role in ['Admin', 'Receptionist'] %}
+            <a href="/billing" class="nav-item fade-in stagger-3 {% if request.path.startswith('/billing') %}active{% endif %}">
+                <i class="fas fa-file-invoice-dollar"></i> <span>Billing</span>
+            </a>
+            {% endif %}
+            
+            <a href="/reminders" class="nav-item fade-in stagger-3 {% if request.path.startswith('/reminders') %}active{% endif %}">
+                <i class="fas fa-bell"></i> <span>Reminders</span>
+            </a>
+            
+            {% if current_user.role == 'Admin' %}
+            <a href="/reports" class="nav-item fade-in stagger-3 {% if request.path.startswith('/reports') %}active{% endif %}">
+                <i class="fas fa-chart-bar"></i> <span>Reports</span>
+            </a>
+            <a href="/expenses" class="nav-item fade-in stagger-3 {% if request.path.startswith('/expenses') %}active{% endif %}">
+                <i class="fas fa-wallet"></i> <span>Expenses</span>
+            </a>
+            {% endif %}
+            
+            <a href="/attendance" class="nav-item fade-in stagger-4 {% if request.path.startswith('/attendance') %}active{% endif %}">
+                <i class="fas fa-id-badge"></i> <span>Attendance</span>
+            </a>
+            <a href="/settings" class="nav-item fade-in stagger-4 {% if request.path.startswith('/settings') %}active{% endif %}">
+                <i class="fas fa-cog"></i> <span>Settings</span>
+            </a>
+            
+            {% if current_user.role == 'Admin' %}
+            <a href="{{ url_for('users.list_users') }}" class="nav-item fade-in stagger-4 {% if request.path.startswith('/users') %}active{% endif %}">
+                <i class="fas fa-user-shield"></i> <span>Admin Panel</span>
+            </a>
+            {% endif %}
+        </nav>
+        
+    </aside>
+
+    <!-- Main Content wrapper -->
+    <div class="main-content">
+        <header class="topbar">
+            <div class="topbar-left">
+                <button id="sidebar-toggle"><i class="fas fa-bars"></i></button>
+                <div style="background:var(--bg-card); padding:8px 15px; border-radius:20px; border:1px solid var(--border-color); display:flex; align-items:center; font-size:0.9rem; cursor:pointer;" onclick="document.getElementById('global-search').classList.add('active'); document.getElementById('search-input').focus();">
+                    <i class="fas fa-search" style="color:var(--text-muted); margin-right:10px;"></i>
+                    <span style="color:var(--text-muted); font-family:'Inter', sans-serif; font-weight: 600;">Global Search... <span style="background:rgba(255,255,255,0.1); padding:2px 5px; border-radius:4px; font-size:0.7rem; margin-left:10px;">Ctrl+K</span></span>
+                </div>
+            </div>
+            <div class="topbar-right">
+                <button class="notif-btn" onclick="document.querySelector('.notif-dropdown').classList.toggle('show'); event.stopPropagation();">
+                    <i class="fas fa-bell"></i>
+                    <span class="notif-count" style="display:none;">0</span>
+                    <div class="notif-dropdown">
+                        <div class="notif-header">
+                            <div>Notifications</div>
+                            <div style="display:flex; gap:12px;">
+                                <div style="font-size:0.75rem; cursor:pointer; color:var(--text-muted); transition:color 0.2s;" onclick="markAllRead(event)" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text-muted)'"><i class="fas fa-check-double"></i> Read All</div>
+                                <div style="font-size:0.75rem; cursor:pointer; color:var(--text-muted); transition:color 0.2s;" onclick="clearAllNotifs(event)" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='var(--text-muted)'"><i class="fas fa-trash"></i> Clear</div>
+                            </div>
+                        </div>
+                        <div class="notif-list">
+                            <!-- Populated via JS -->
+                        </div>
+                    </div>
+                </button>
+                <select id="theme-selector" class="theme-select" onchange="ThemeManager.apply(this.value)">
+                    <option value="purple">Purple Theme</option>
+                    <option value="blue">Blue Theme</option>
+                    <option value="green">Green Theme</option>
+                    <option value="light">Light Theme</option>
+                </select>
+                <script>
+                    const opts = ['purple', 'blue', 'green', 'light'];
+                    let curT = ThemeManager.current;
+                    if(!opts.includes(curT)) curT = 'purple';
+                    document.getElementById('theme-selector').value = curT;
+                </script>
+
+                <div style="position:relative; margin-left:20px;">
+                    <div class="user-profile-btn" style="display:flex; align-items:center; gap:10px; cursor:pointer; padding:5px 10px; border-radius:8px; transition:background 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
+                        <div style="width:34px; height:34px; border-radius:50%; background:var(--accent); color:#fff; display:flex; align-items:center; justify-content:center; font-size:1.1rem; font-family:'Poppins', sans-serif; overflow:hidden; font-weight: 600;">
+                            {% if current_user.profile_photo %}
+                                <img src="{{ current_user.profile_photo }}" style="width:100%; height:100%; object-fit:cover;">
+                            {% else %}
+                                {{ current_user.username[0]|upper }}
+                            {% endif %}
+                        </div>
+                        <div style="font-family:'Inter', sans-serif; font-weight:600; font-size:0.9rem; color:var(--text-primary); display:flex; align-items:center; gap:5px;">
+                            <span class="d-none d-md-inline">{{ current_user.username }}</span>
+                            <i class="fas fa-chevron-down" style="font-size:0.7rem; color:var(--text-muted);"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="user-dropdown-menu" style="position:absolute; top:calc(100% + 5px); right:0; background:var(--bg-card); border:1px solid var(--border-color); border-radius:12px; padding:8px 0; min-width:180px; box-shadow:var(--shadow-lg); display:none; flex-direction:column; z-index:1000; border-top:3px solid var(--accent);">
+                        <div style="padding:10px 15px; border-bottom:1px solid var(--border-color); margin-bottom:5px;">
+                            <div style="font-family:'Poppins', sans-serif; font-size:0.9rem; font-weight:600; color:var(--text-primary);">{{ current_user.username }}</div>
+                            <div style="font-family:'Inter', sans-serif; font-size:0.75rem; color:var(--text-muted);">{{ current_user.role }}</div>
+                        </div>
+                        <a href="{{ url_for('settings.index') }}" style="padding:10px 15px; color:var(--text-primary); text-decoration:none; font-family:'Inter', sans-serif; font-size:0.85rem; display:flex; align-items:center; gap:10px; transition:var(--transition);" onmouseover="this.style.background='rgba(255,255,255,0.05)'; this.style.color='var(--accent)';" onmouseout="this.style.background='transparent'; this.style.color='var(--text-primary)';">
+                            <i class="fas fa-user-circle"></i> Profile
+                        </a>
+                        <a href="{{ url_for('settings.index') }}" style="padding:10px 15px; color:var(--text-primary); text-decoration:none; font-family:'Inter', sans-serif; font-size:0.85rem; display:flex; align-items:center; gap:10px; transition:var(--transition);" onmouseover="this.style.background='rgba(255,255,255,0.05)'; this.style.color='var(--accent)';" onmouseout="this.style.background='transparent'; this.style.color='var(--text-primary)';">
+                            <i class="fas fa-cog"></i> Settings
+                        </a>
+                        <a href="{{ url_for('auth.logout') }}" style="padding:10px 15px; color:#ef4444; text-decoration:none; font-family:'Inter', sans-serif; font-size:0.85rem; display:flex; align-items:center; gap:10px; transition:var(--transition); border-top:1px solid var(--border-color); margin-top:5px;" onmouseover="this.style.background='rgba(239,68,68,0.1)';" onmouseout="this.style.background='transparent';">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="container">
+            <div class="page-header fade-in">
+                <h2 style="margin:0; font-size:1.5rem; letter-spacing:1px; color:var(--text-primary);">{% block page_title %}Overview{% endblock %}</h2>
+                {% block page_actions %}{% endblock %}
+            </div>
+            {% block content %}{% endblock %}
+        </main>
+        
+        <footer style="padding: 20px; text-align:center; font-family:'Inter', sans-serif; font-weight: 600; font-size:0.8rem; color:var(--text-muted); border-top:1px solid var(--border-color); margin-top:auto;">
+            © 2026 VSMS | Developed by Dinbandhu Choudhary & Aditya Hardas
+        </footer>
+    </div>
+
+    <!-- AI Chatbot Floating Box -->
+    {% if current_user.role in ['Admin', 'Mechanic', 'Receptionist'] %}
+    <div class="ai-fab" id="chatbot-fab">
+        <i class="fas fa-robot"></i>
+    </div>
+    
+    <div class="ai-chat-window" id="chatbot-window">
+        <div id="chatbot-header">
+            <div><i class="fas fa-robot"></i> VSMS AI Assistant</div>
+            <button id="chatbot-close"><i class="fas fa-times"></i></button>
+        </div>
+        <div id="chatbot-messages">
+            <div style="color:var(--accent); font-family:'Inter', sans-serif; font-weight: 600; margin-bottom:15px; text-align:center; font-size:0.8rem; border-bottom:1px solid var(--border-color); padding-bottom:10px;">
+                VSMS AI CORE CONNECTED.
+            </div>
+        </div>
+        <div style="padding: 10px; display:flex; gap:10px; overflow-x:auto; background:var(--bg-sidebar);">
+            <div class="ai-chip" style="background:var(--bg-card); border:1px solid var(--border-color); padding:5px 10px; border-radius:15px; font-size:0.8rem; white-space:nowrap; cursor:pointer; color:var(--text-primary);"><i class="fas fa-search"></i> Diagnose Issue</div>
+            <div class="ai-chip" style="background:var(--bg-card); border:1px solid var(--border-color); padding:5px 10px; border-radius:15px; font-size:0.8rem; white-space:nowrap; cursor:pointer; color:var(--text-primary);"><i class="fas fa-rupee-sign"></i> Service Cost</div>
+            <div class="ai-chip" style="background:var(--bg-card); border:1px solid var(--border-color); padding:5px 10px; border-radius:15px; font-size:0.8rem; white-space:nowrap; cursor:pointer; color:var(--text-primary);"><i class="fas fa-oil-can"></i> Oil Change</div>
+        </div>
+        <div id="chatbot-input-area">
+            <input type="text" id="chatbot-input" placeholder="Ask anything..." autocomplete="off">
+            <button id="chatbot-send" class="btn-metal btn-small" style="border-radius:12px; padding:0 15px;"><i class="fas fa-paper-plane"></i></button>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Global Search Overlay -->
+    <div class="search-overlay" id="global-search">
+        <div class="search-box">
+            <input type="text" class="search-input" id="search-input" placeholder="Search customers, vehicles, jobs, inventory... (Type to search)" autocomplete="off">
+            <div class="search-results" id="search-results">
+                <!-- Populated via JS -->
+            </div>
+            <div style="background:var(--bg-card); padding:10px 24px; font-size:0.8rem; color:var(--text-muted); font-family:'Inter', sans-serif; font-weight: 600; display:flex; justify-content:space-between; border-top:1px solid var(--border-color);">
+                <span>Use arrows to navigate</span>
+                <span>ESC to close</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/ai_chat.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

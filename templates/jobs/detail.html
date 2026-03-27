@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+
+{% block title %}Job Card Detail | GMS{% endblock %}
+{% block page_title %}WORK ORDER: WO-{{ "%04d" | format(job.id) }}{% endblock %}
+
+{% block content %}
+<div style="display:flex; gap:20px; flex-wrap:wrap;">
+    
+    <!-- LEFT PANEL: Info & Status -->
+    <div style="flex:1; min-width:350px; display:flex; flex-direction:column; gap:20px;">
+        
+        <div class="panel-metal">
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #333; padding-bottom:10px; margin-bottom:15px;">
+                <h3 style="margin:0; color:var(--color-gold);"><i class="fas fa-info-circle"></i> DETAILS</h3>
+                <!-- QR Link public facing -->
+                <a href="/status/{{ job.qr_token }}" target="_blank" class="btn-metal btn-small" title="Public Tracking Page"><i class="fas fa-external-link-alt"></i></a>
+            </div>
+            
+            <div style="font-family:'Inter', sans-serif; font-weight: 600; line-height:1.8;">
+                <div><span style="color:#888; display:inline-block; width:100px;">DATE:</span> {{ job.created_at.strftime('%Y-%m-%d %H:%M') }}</div>
+                <div><span style="color:#888; display:inline-block; width:100px;">VEHICLE:</span> <a href="/vehicles/{{ job.vehicle_id }}" style="color:var(--color-chrome);">{{ job.vehicle.license_plate }}</a></div>
+                <div><span style="color:#888; display:inline-block; width:100px;">CLIENT:</span> <a href="/customers/{{ job.customer_id }}" style="color:var(--color-chrome);">{{ job.customer.name }}</a></div>
+                <div><span style="color:#888; display:inline-block; width:100px;">MECHANIC:</span> {% if job.mechanic %}{{ job.mechanic.username }}{% else %}Unassigned{% endif %}</div>
+                
+                <div style="margin-top:15px; border-top:1px dashed #444; padding-top:15px;">
+                    <span style="color:#888; display:block; margin-bottom:5px;">CURRENT STATUS:</span>
+                    <form method="POST" action="/jobs/{{ job.id }}/status" style="display:flex; gap:10px;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        {% if job.status == 'Delivered' %}
+                        <select name="status" class="input-engraved" style="flex-grow:1; font-weight:bold; color:var(--color-green-ok);">
+                        {% elif job.status == 'Ready' %}
+                        <select name="status" class="input-engraved" style="flex-grow:1; font-weight:bold; color:var(--color-gold);">
+                        {% else %}
+                        <select name="status" class="input-engraved" style="flex-grow:1; font-weight:bold;">
+                        {% endif %}
+                            {% for s in ['Received', 'Diagnosing', 'In Progress', 'Quality Check', 'Ready', 'Delivered'] %}
+                            <option value="{{ s }}" {% if job.status == s %}selected{% endif %}>{{ s }}</option>
+                            {% endfor %}
+                        </select>
+                        <button type="submit" class="btn-metal">SET</button>
+                    </form>
+                </div>
+                
+                <div style="margin-top:15px; border-top:1px dashed #444; padding-top:15px;">
+                    <span style="color:#888; display:block; margin-bottom:5px;">SYMPTOMS / NOTES:</span>
+                    <div style="background:#111; padding:10px; border:1px solid #333; border-radius:4px; min-height:60px;">
+                        {{ job.notes or 'None' }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="panel-metal" style="text-align:center;">
+            <h3 style="margin-top:0; color:var(--color-chrome);"><i class="fas fa-qrcode text-gold"></i> TRACKING QR</h3>
+            {% if job.qr_code_path %}
+            <div style="background:white; display:inline-block; padding:10px; border-radius:10px; margin-top:10px;">
+                <img src="{{ url_for('static', filename=job.qr_code_path) }}" alt="QR Code" style="width:150px; height:150px;">
+            </div>
+            {% else %}
+            <p style="color:#888;">Generating QR Sequence...</p>
+            {% endif %}
+            <p style="font-family:'Inter', sans-serif; font-weight: 600; font-size:0.8rem; color:#888; margin-top:10px;">Scan for live public status</p>
+        </div>
+        
+    </div>
+
+    <!-- RIGHT PANEL: Services & Parts & Billing -->
+    <div style="flex:2; min-width:400px; display:flex; flex-direction:column; gap:20px;">
+        
+        <!-- SERVICES -->
+        <div class="panel-metal">
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #333; padding-bottom:10px; margin-bottom:15px;">
+                <h3 style="margin:0; color:var(--color-chrome);"><i class="fas fa-wrench text-gold"></i> SERVICES PERFORMED</h3>
+            </div>
+            
+            <table style="margin-bottom:15px;">
+                <tbody>
+                    {% for js in job.job_services %}
+                    <tr>
+                        <td style="font-family:'Poppins', sans-serif; font-weight: 500;">{{ js.service.name }}</td>
+                        <td style="text-align:right; font-family:'Inter', sans-serif; font-weight: 600; color:var(--color-chrome);">${{ "%.2f"|format(js.price) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            
+            {% if job.status != 'Delivered' and current_user.role in ['Admin', 'Mechanic'] %}
+            <form method="POST" action="/jobs/{{ job.id }}/add-service" style="display:flex; gap:10px; border-top:1px dotted #444; padding-top:15px;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <select name="service_id" class="input-engraved" style="flex-grow:1;" required>
+                    <option value="">-- SELECT SERVICE OPERATION --</option>
+                    {% for svc in services %}
+                    <option value="{{ svc.id }}">{{ svc.name }} - ${{ "%.2f"|format(svc.base_price) }}</option>
+                    {% endfor %}
+                </select>
+                <button type="submit" class="btn-metal"><i class="fas fa-plus"></i> ADD</button>
+            </form>
+            {% endif %}
+        </div>
+        
+        <!-- PARTS -->
+        <div class="panel-metal">
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #333; padding-bottom:10px; margin-bottom:15px;">
+                <h3 style="margin:0; color:var(--color-chrome);"><i class="fas fa-cogs text-gold"></i> INVENTORY PARTS ISSUED</h3>
+            </div>
+            
+            <table style="margin-bottom:15px;">
+                <tbody id="parts-list">
+                    {% for jp in job.job_parts %}
+                    <tr>
+                        <td style="font-family:'Poppins', sans-serif; font-weight: 500;">{{ jp.quantity_used }}x {{ jp.part.part_name }}</td>
+                        <td style="text-align:right; font-family:'Inter', sans-serif; font-weight: 600; color:var(--color-chrome);">${{ "%.2f"|format(jp.unit_price * jp.quantity_used) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            
+            {% if job.status != 'Delivered' and current_user.role in ['Admin', 'Mechanic'] %}
+            <form id="addPartForm" style="display:flex; gap:10px; border-top:1px dotted #444; padding-top:15px;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <select name="inventory_id" class="input-engraved" style="flex-grow:1;" required>
+                    <option value="">-- SELECT PART --</option>
+                    {% for item in inventory %}
+                    <option value="{{ item.id }}">{{ item.part_name }} (Stock: {{ item.quantity }}) - ${{ "%.2f"|format(item.unit_price) }}</option>
+                    {% endfor %}
+                </select>
+                <input type="number" name="quantity" class="input-engraved" value="1" min="1" style="width:70px;" required>
+                <button type="submit" class="btn-metal" id="addPartBtn"><i class="fas fa-plus"></i> ADD</button>
+            </form>
+            {% endif %}
+        </div>
+        
+        <!-- BILLING SUMMARY -->
+        <div class="panel-metal" style="text-align:right;">
+            <div style="font-family:'Inter', sans-serif; font-weight: 600; font-size:1.5rem; color:var(--color-chrome); margin-bottom:15px;">
+                RUNNING TOTAL: <span style="color:var(--color-gold); font-size:2rem; font-weight:bold;">${{ "%.2f"|format(current_total) }}</span>
+            </div>
+            <div style="display:flex; justify-content:flex-end; gap:15px;">
+                <a href="/jobs/{{ job.id }}/pdf" class="btn-metal"><i class="fas fa-file-pdf"></i> GENERATE PDF TICKET</a>
+                <a href="/billing/invoice/{{ job.id }}" class="btn-metal" style="color:var(--color-blue-info); border-color:var(--color-blue-info);"><i class="fas fa-file-invoice-dollar"></i> PROCEED TO BILLING</a>
+            </div>
+        </div>
+        
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('addPartForm')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const form = e.target;
+    const btn = document.getElementById('addPartBtn');
+    btn.disabled = true;
+    
+    try {
+        const formData = new FormData(form);
+        const res = await fetchWithCSRF(`/jobs/{{ job.id }}/add-part`, {
+            method: 'POST',
+            body: formData,
+            headers: {'Accept': 'application/json'}
+        });
+        
+        const data = await res.json();
+        if(data.success) {
+            showToast(`Added ${data.qty}x ${data.part}`, 'success');
+            setTimeout(() => window.location.reload(), 1000); // Reload to recalculate UI robustly
+        } else {
+            showToast(data.message || 'Error occurred', 'error');
+            btn.disabled = false;
+        }
+    } catch(err) {
+        showToast('System Malfunction.', 'error');
+        btn.disabled = false;
+    }
+});
+</script>
+{% endblock %}

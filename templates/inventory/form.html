@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}Inventory Form | GMS{% endblock %}
+{% block page_title %}{{ 'EDIT INVENTORY ITEM' if item else 'ADD NEW PART' }}{% endblock %}
+
+{% block content %}
+<div class="panel-metal" style="max-width:600px; margin:0 auto;">
+    <form method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+        
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+            <div class="form-group" style="grid-column: 1 / -1;">
+                <label><i class="fas fa-cog text-gold"></i> PART NAME *</label>
+                <input type="text" name="part_name" class="input-engraved" value="{{ item.part_name if item else '' }}" required>
+            </div>
+            
+            <div class="form-group">
+                <label>PART NUMBER (PN)</label>
+                <input type="text" name="part_number" class="input-engraved" value="{{ item.part_number if item else '' }}">
+            </div>
+            
+            <div class="form-group">
+                <label>CATEGORY</label>
+                <input type="text" name="category" class="input-engraved" value="{{ item.category if item else '' }}" placeholder="e.g. Fluids, Brakes">
+            </div>
+            
+            <div class="form-group">
+                <label>UNIT PRICE (USD) *</label>
+                <input type="number" step="0.01" name="unit_price" class="input-engraved" value="{{ item.unit_price if item else '' }}" required>
+            </div>
+            
+            <div class="form-group">
+                <label>SUPPLIER</label>
+                <input type="text" name="supplier" class="input-engraved" value="{{ item.supplier if item else '' }}">
+            </div>
+
+            {% if not item %}
+            <div class="form-group">
+                <label><i class="fas fa-boxes text-gold"></i> INITIAL QUANTITY</label>
+                <input type="number" name="quantity" class="input-engraved" value="0" min="0">
+            </div>
+            {% endif %}
+            
+            <div class="form-group">
+                <label><i class="fas fa-exclamation-circle text-gold"></i> REORDER MIN LEVEL</label>
+                <input type="number" name="reorder_level" class="input-engraved" value="{{ item.reorder_level if item else 5 }}" min="0">
+            </div>
+        </div>
+        
+        <div style="margin-top:25px; display:flex; justify-content:space-between; border-top:1px solid #333; padding-top:20px;">
+            <a href="{{ url_for('inventory.list_inventory') }}" class="btn-metal" style="color:var(--color-text-muted);"><i class="fas fa-times"></i> CANCEL</a>
+            <button type="submit" class="btn-metal" style="color:var(--color-green-ok); border-color:var(--color-green-ok);">
+                <i class="fas fa-save"></i> {{ 'UPDATE ITEM' if item else 'ADD TO INVENTORY' }}
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

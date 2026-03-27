@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}Customer Form | GMS{% endblock %}
+{% block page_title %}{{ 'EDIT CUSTOMER' if customer else 'NEW CUSTOMER REGISTRATION' }}{% endblock %}
+
+{% block content %}
+<div class="panel-metal" style="max-width:600px; margin:0 auto;">
+    <form method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+        
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+            <div class="form-group" style="grid-column: 1 / -1;">
+                <label><i class="fas fa-user text-gold"></i> FULL NAME *</label>
+                <input type="text" name="name" class="input-engraved" value="{{ customer.name if customer else '' }}" required>
+            </div>
+            
+            <div class="form-group">
+                <label><i class="fas fa-phone text-gold"></i> PHONE NUMBER</label>
+                <input type="text" name="phone" class="input-engraved" value="{{ customer.phone if customer else '' }}">
+            </div>
+            
+            <div class="form-group">
+                <label><i class="fas fa-envelope text-gold"></i> EMAIL ADDRESS</label>
+                <input type="email" name="email" class="input-engraved" value="{{ customer.email if customer else '' }}">
+            </div>
+            
+            <div class="form-group" style="grid-column: 1 / -1;">
+                <label><i class="fas fa-map-marker-alt text-gold"></i> PHYSICAL ADDRESS</label>
+                <textarea name="address" class="input-engraved" rows="3">{{ customer.address if customer else '' }}</textarea>
+            </div>
+        </div>
+        
+        <div style="margin-top:25px; display:flex; justify-content:space-between; border-top:1px solid #333; padding-top:20px;">
+            <a href="{{ url_for('customers.list_customers') }}" class="btn-metal" style="color:var(--color-text-muted);"><i class="fas fa-times"></i> CANCEL</a>
+            <button type="submit" class="btn-metal" style="color:var(--color-green-ok); border-color:var(--color-green-ok);">
+                <i class="fas fa-save"></i> {{ 'UPDATE' if customer else 'SAVE' }} RECORD
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block title %}Executive Analytics | GMS{% endblock %}
+{% block page_title %}SYSTEM INTELLIGENCE REPORT{% endblock %}
+
+{% block content %}
+<div style="display:flex; gap:20px; flex-wrap:wrap; margin-bottom:20px;">
+    
+    <!-- KPI 1 -->
+    <div class="panel-metal" style="flex:1; min-width:250px; text-align:center;">
+        <h4 style="margin:0; color:#888; font-family:'Inter', sans-serif; font-weight: 600;">TOTAL REVENUE (NET)</h4>
+        <div style="font-size:2.5rem; font-family:'Poppins', sans-serif; font-weight: 500; color:var(--color-gold); margin-top:10px;">
+            ${{ "%.2f"|format(revenue) }}
+        </div>
+        <div style="font-size:0.8rem; color:var(--color-green-ok); margin-top:5px;"><i class="fas fa-arrow-up"></i> LIVE DATA</div>
+    </div>
+    
+    <!-- KPI 2 -->
+    <div class="panel-metal" style="flex:1; min-width:250px; text-align:center;">
+        <h4 style="margin:0; color:#888; font-family:'Inter', sans-serif; font-weight: 600;">DELIVERED WORK ORDERS</h4>
+        <div style="font-size:2.5rem; font-family:'Poppins', sans-serif; font-weight: 500; color:var(--color-chrome); margin-top:10px;">
+            {{ completed_jobs }}
+        </div>
+        <div style="font-size:0.8rem; color:var(--color-blue-info); margin-top:5px;"><i class="fas fa-check-double"></i> LIFETIME</div>
+    </div>
+    
+    <!-- EXPORT ACTION -->
+    <div class="panel-metal" style="flex:1; min-width:250px; display:flex; flex-direction:column; justify-content:center; align-items:center;">
+        <h4 style="margin:0; color:#888; font-family:'Inter', sans-serif; font-weight: 600; margin-bottom:15px;">DATA EXTRACTION</h4>
+        <a href="{{ url_for('reports.export_revenue') }}" class="btn-metal" style="padding:15px 30px; font-size:1.1rem;">
+            <i class="fas fa-file-csv"></i> EXPORT REVENUE CSV
+        </a>
+    </div>
+
+</div>
+
+<div style="display:flex; gap:20px; flex-wrap:wrap;">
+    
+    <div class="panel-metal" style="flex:1; min-width:350px;">
+        <h3 style="margin-top:0; color:var(--color-chrome); border-bottom:1px solid #333; padding-bottom:10px;">
+            <i class="fas fa-users-cog text-gold"></i> MECHANIC PERFORMANCE MATRIX
+        </h3>
+        <table style="margin-top:10px;">
+            <thead>
+                <tr>
+                    <th>OPERATOR ID</th>
+                    <th style="text-align:right;">JOBS CLEARED</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for m in mechanics %}
+                <tr>
+                    <td style="font-family:'Poppins', sans-serif; font-weight: 500; color:var(--color-gold);">{{ m.username }}</td>
+                    <td style="text-align:right; font-family:'Inter', sans-serif; font-weight: 600; font-size:1.2rem;">{{ m[1] }}</td>
+                </tr>
+                {% else %}
+                <tr><td colspan="2" style="text-align:center; color:#666;">No completed jobs tracked yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="panel-metal" style="flex:1; min-width:350px;">
+        <h3 style="margin:0; color:var(--color-chrome); border-bottom:1px solid #333; padding-bottom:10px;">
+            <i class="fas fa-gem text-gold"></i> TIER-1 CLIENTS (BY REVENUE)
+        </h3>
+        <table style="margin-top:10px;">
+            <thead>
+                <tr>
+                    <th>CLIENT NAME</th>
+                    <th style="text-align:right;">LIFETIME VALUE (LTV)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in top_customers %}
+                <tr>
+                    <td style="font-family:'Inter', sans-serif; font-weight: 600; color:var(--color-chrome);">{{ c.name }}</td>
+                    <td style="text-align:right; font-family:'Inter', sans-serif; font-weight: 600; font-size:1.2rem; color:var(--color-green-ok);">${{ "%.2f"|format(c[1]) }}</td>
+                </tr>
+                {% else %}
+                <tr><td colspan="2" style="text-align:center; color:#666;">No invoice revenue data.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

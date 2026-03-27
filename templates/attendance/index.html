@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Mechanic Attendance - VSMS{% endblock %}
+{% block page_title %}Mechanic Attendance{% endblock %}
+
+{% block content %}
+<div class="dashboard-grid fade-in">
+    <div class="stat-card" style="grid-column: span 2;">
+        <h3 style="margin-top:0; color:var(--text-primary);"><i class="fas fa-clock text-accent"></i> My Attendance Actions</h3>
+        
+        <div style="display:flex; justify-content:center; gap:20px; align-items:center; height:100px;">
+            <form method="POST" action="{{ url_for('attendance.check_in') }}" style="display:inline;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <button type="submit" class="btn-metal" style="padding:15px 30px; font-size:1.2rem; border-color:var(--color-green-ok); color:var(--color-green-ok);">
+                    <i class="fas fa-sign-in-alt"></i> CHECK IN
+                </button>
+            </form>
+            
+            <form method="POST" action="{{ url_for('attendance.check_out') }}" style="display:inline;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <button type="submit" class="btn-metal" style="padding:15px 30px; font-size:1.2rem; border-color:#f59e0b; color:#f59e0b;">
+                    <i class="fas fa-sign-out-alt"></i> CHECK OUT
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="glass-card fade-in" style="margin-top:24px;">
+    <h3 style="margin-top:0; color:var(--text-primary);"><i class="fas fa-clipboard-user text-accent"></i> Attendance Log</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Mechanic</th>
+                <th>Check In</th>
+                <th>Check Out</th>
+                <th>Hours Worked</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for a in records %}
+            <tr>
+                <td>{{ a.date.strftime('%Y-%m-%d') }}</td>
+                <td style="color:var(--text-primary);">{{ a.mechanic.username }}</td>
+                <td><span class="text-green"><i class="fas fa-sign-in-alt"></i> {{ a.check_in.strftime('%H:%M:%S') if a.check_in else 'N/A' }}</span></td>
+                <td><span class="text-gold"><i class="fas fa-sign-out-alt"></i> {{ a.check_out.strftime('%H:%M:%S') if a.check_out else 'Active' }}</span></td>
+                <td style="font-family:'Inter', sans-serif; font-weight: 600;">
+                    {% if a.hours_worked %}
+                        {{ "%.2f"|format(a.hours_worked) }} hrs
+                    {% else %}
+                        ---
+                    {% endif %}
+                </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="5" style="text-align:center;">No attendance records found.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

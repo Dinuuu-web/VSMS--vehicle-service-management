@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% block title %}New Inspection - VSMS{% endblock %}
+{% block page_title %}New Vehicle Inspection{% endblock %}
+
+{% block content %}
+<div class="glass-card fade-in">
+    <form method="POST" action="{{ url_for('inspections.add') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+        
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin-bottom:20px;">
+            <div>
+                <label style="font-family:'Inter', sans-serif; font-weight: 600; color:var(--text-muted); font-size:0.8rem;">VEHICLE</label>
+                <select name="vehicle_id" class="input-engraved" required>
+                    <option value="">Select a vehicle...</option>
+                    {% for v in vehicles %}
+                    <option value="{{ v.id }}">{{ v.license_plate }} ({{ v.make }} {{ v.model }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label style="font-family:'Inter', sans-serif; font-weight: 600; color:var(--text-muted); font-size:0.8rem;">ATTACH TO JOB CARD (Optional)</label>
+                <select name="job_card_id" class="input-engraved">
+                    <option value="">None</option>
+                    {% for j in jobs %}
+                    <option value="{{ j.id }}" {% if selected_job and selected_job.id == j.id %}selected{% endif %}>#{{ j.id }} - {{ j.status }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        
+        <h4 style="color:var(--accent); font-family:'Poppins', sans-serif; font-weight: 500; border-bottom:1px solid var(--border-color); padding-bottom:10px; margin-top:30px;">CHECKLIST</h4>
+        
+        <style>
+        input[type="radio"].checklist-radio {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+        }
+        .option-box {
+            cursor: pointer;
+            transition: transform 0.2s ease, background 0.2s ease, border 0.2s ease, box-shadow 0.2s ease;
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            font-weight: 500;
+            font-size: 0.9rem;
+            min-width: 90px;
+            user-select: none;
+        }
+        .option-box:hover {
+            transform: scale(1.03);
+            background: rgba(255,255,255,0.03);
+        }
+        .option-box.active {
+            border: 1px solid #a855f7;
+            box-shadow: 0 0 10px rgba(168,85,247,0.5);
+            background: rgba(168,85,247,0.1);
+            color: #fff;
+        }
+        </style>
+
+        <table style="width:100%; margin-bottom:20px; border-collapse: separate; border-spacing: 0 10px;">
+            <thead>
+                <tr>
+                    <th style="text-align:left; padding-bottom:10px;">Category</th>
+                    <th style="text-align:center; padding-bottom:10px; color:var(--color-green-ok);">Good (3)</th>
+                    <th style="text-align:center; padding-bottom:10px; color:#f59e0b;">Average (2)</th>
+                    <th style="text-align:center; padding-bottom:10px; color:#ef4444;">Poor (1)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cat in ['engine', 'brake', 'tire', 'battery', 'ac', 'lights', 'body'] %}
+                <tr>
+                    <td style="text-transform:capitalize; font-family:'Rajdhani'; font-size:1.1rem; color:var(--text-primary);">{{ cat }} Condition</td>
+                    <td style="text-align:center;">
+                        <div class="option-box" onclick="selectOption(this)">
+                            <input type="radio" class="checklist-radio" name="{{ cat }}_condition" value="Good" required>
+                            Good
+                        </div>
+                    </td>
+                    <td style="text-align:center;">
+                        <div class="option-box" onclick="selectOption(this)">
+                            <input type="radio" class="checklist-radio" name="{{ cat }}_condition" value="Average">
+                            Average
+                        </div>
+                    </td>
+                    <td style="text-align:center;">
+                        <div class="option-box" onclick="selectOption(this)">
+                            <input type="radio" class="checklist-radio" name="{{ cat }}_condition" value="Poor">
+                            Poor
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <script>
+        function selectOption(element) {
+            const row = element.closest('tr');
+            const boxes = row.querySelectorAll('.option-box');
+            boxes.forEach(box => box.classList.remove('active'));
+            
+            element.classList.add('active');
+            
+            const radio = element.querySelector('input[type="radio"]');
+            if (radio) {
+                radio.checked = true;
+            }
+        }
+        </script>
+        
+        <div>
+            <label style="font-family:'Inter', sans-serif; font-weight: 600; color:var(--text-muted); font-size:0.8rem;">INSPECTOR NOTES</label>
+            <textarea name="notes" class="input-engraved" rows="4"></textarea>
+        </div>
+        
+        <div style="margin-top:20px; text-align:right;">
+            <button type="submit" class="btn-metal"><i class="fas fa-clipboard-check"></i> SUBMIT INSPECTION</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

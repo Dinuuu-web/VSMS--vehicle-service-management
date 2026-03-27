@@ -1,0 +1,7 @@
+{
+    "python.defaultInterpreterPath": "c:\\Users\\chydi\\OneDrive\\Desktop\\GMS\\venv\\Scripts\\python.exe",
+    "python.analysis.extraPaths": [
+        "c:\\Users\\chydi\\OneDrive\\Desktop\\GMS"
+    ],
+    "python.analysis.typeCheckingMode": "basic"
+}

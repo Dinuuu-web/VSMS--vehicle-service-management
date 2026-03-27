@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block title %}Vehicle History | GMS{% endblock %}
+{% block page_title %}VEHICLE PROFILE: {{ vehicle.license_plate }}{% endblock %}
+
+{% block content %}
+<div style="display:flex; gap:20px; flex-wrap:wrap;">
+    
+    <!-- Left Column: Details -->
+    <div style="display:flex; flex-direction:column; gap:20px; flex:1; min-width:300px;">
+        
+        <div class="panel-metal">
+            <h3 style="margin-top:0; border-bottom:1px solid #333; padding-bottom:10px; color:var(--color-gold);">
+                <i class="fas fa-info-circle"></i> SPECS
+            </h3>
+            <div style="font-family:'Inter', sans-serif; font-weight: 600; font-size:1.1rem; line-height:1.8;">
+                <div><span style="color:var(--color-text-muted); display:inline-block; width:100px;">MAKE:</span> {{ vehicle.make }}</div>
+                <div><span style="color:var(--color-text-muted); display:inline-block; width:100px;">MODEL:</span> {{ vehicle.model }}</div>
+                <div><span style="color:var(--color-text-muted); display:inline-block; width:100px;">YEAR:</span> {{ vehicle.year or 'N/A' }}</div>
+                <div><span style="color:var(--color-text-muted); display:inline-block; width:100px;">COLOR:</span> {{ vehicle.color or 'N/A' }}</div>
+                <div><span style="color:var(--color-text-muted); display:inline-block; width:100px;">VIN:</span> <span style="font-size:0.9rem;">{{ vehicle.vin or 'N/A' }}</span></div>
+                <div style="margin-top:10px; border-top:1px dashed #444; padding-top:10px;">
+                    <span style="color:var(--color-text-muted); display:inline-block; width:100px;">MILEAGE:</span> <span class="text-gold" style="font-size:1.3rem;">{{ vehicle.mileage or 0 }} km</span>
+                </div>
+            </div>
+            
+            {% if current_user.role in ['Admin', 'Receptionist'] %}
+            <div style="margin-top:20px;">
+                <a href="{{ url_for('vehicles.edit', id=vehicle.id) }}" class="btn-metal btn-small"><i class="fas fa-edit"></i> UPDATE SPECS</a>
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="panel-metal" style="display:flex; flex-direction:column; align-items:center;">
+            <h3 style="margin-top:0; border-bottom:1px solid #333; padding-bottom:10px; color:var(--color-gold); width:100%;">
+                <i class="fas fa-heartbeat"></i> HEALTH SCORE
+            </h3>
+            <canvas id="healthScoreGauge" style="width:200px; height:150px; margin-top:20px;"></canvas>
+            <p style="text-align:center; font-family:'Inter', sans-serif; font-weight: 600; color:var(--color-text-muted); font-size:0.8rem; margin-top:20px;">
+                Algorithmic assessment based on mileage,<br>service frequency, and time since last visit.
+            </p>
+        </div>
+        
+        <div class="panel-metal">
+            <h3 style="margin-top:0; border-bottom:1px solid #333; padding-bottom:10px; color:var(--color-chrome);">
+                <i class="fas fa-user-circle text-gold"></i> OWNER
+            </h3>
+            <div style="font-family:'Inter', sans-serif; font-weight: 600;">
+                <a href="{{ url_for('customers.detail', id=vehicle.customer.id) }}" style="color:var(--color-gold); font-size:1.2rem; text-decoration:none; display:block; margin-bottom:5px;">{{ vehicle.customer.name }}</a>
+                <div><i class="fas fa-phone"></i> {{ vehicle.customer.phone or 'N/A' }}</div>
+                <div><i class="fas fa-envelope"></i> {{ vehicle.customer.email or 'N/A' }}</div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Right Column: Job History -->
+    <div class="panel-metal" style="flex:2; min-width:400px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #333; padding-bottom:10px; margin-bottom:15px;">
+            <h3 style="margin:0; color:var(--color-chrome);">
+                <i class="fas fa-history text-gold"></i> SERVICE RECORD
+            </h3>
+            <!-- Assuming we eventually add a new job button here -->
+            <a href="/jobs/create?vehicle={{ vehicle.id }}" class="btn-metal btn-small"><i class="fas fa-plus"></i> NEW WORK ORDER</a>
+        </div>
+        
+        {% if jobs %}
+            <div style="display:flex; flex-direction:column; gap:15px;">
+                {% for job in jobs %}
+                {% if job.status == 'Delivered' %}
+                <div style="background:linear-gradient(145deg, #1e1e1e, #141414); border:1px solid #333; border-left:4px solid var(--color-green-ok); border-radius:4px; padding:15px; box-shadow:0 4px 6px rgba(0,0,0,0.3);">
+                {% elif job.status == 'Received' %}
+                <div style="background:linear-gradient(145deg, #1e1e1e, #141414); border:1px solid #333; border-left:4px solid var(--color-red-alert); border-radius:4px; padding:15px; box-shadow:0 4px 6px rgba(0,0,0,0.3);">
+                {% else %}
+                <div style="background:linear-gradient(145deg, #1e1e1e, #141414); border:1px solid #333; border-left:4px solid var(--color-gold); border-radius:4px; padding:15px; box-shadow:0 4px 6px rgba(0,0,0,0.3);">
+                {% endif %}
+                    
+                    <div style="display:flex; justify-content:space-between; font-family:'Inter', sans-serif; font-weight: 600; border-bottom:1px dotted #444; padding-bottom:10px; margin-bottom:10px;">
+                        <span style="color:var(--color-gold); font-size:1.1rem; font-weight:bold;">WO-{{ "%04d" | format(job.id) }}</span>
+                        <span>{{ job.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+                    </div>
+                    
+                    <div style="display:flex; justify-content:space-between; align-items:flex-end;">
+                        <div style="font-family:'Poppins', sans-serif; font-weight: 500, sans-serif;">
+                            STATUS: <span style="color:var(--color-chrome);">{{ job.status }}</span>
+                        </div>
+                        <a href="/jobs/{{ job.id }}" class="btn-metal btn-small">VIEW DOC</a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div style="padding:40px 20px; text-align:center; color:var(--color-text-muted); font-family:'Inter', sans-serif; font-weight: 600;">
+                <i class="fas fa-folder-open" style="font-size:3rem; margin-bottom:15px; color:#444;"></i>
+                <p>NO SERVICE RECORDS IN ARCHIVE.</p>
+            </div>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // Inject the SVG Gauge functionality from charts.js
+    const score = Number('{{ health_score }}');
+    new SkeuomorphicGauge('healthScoreGauge', score, 'INTEGRITY');
+});
+</script>
+{% endblock %}

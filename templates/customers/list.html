@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}Customers | GMS{% endblock %}
+{% block page_title %}CUSTOMER DATABASE{% endblock %}
+
+{% block content %}
+<div class="panel-metal" style="display:flex; justify-content:space-between; align-items:center;">
+    <form method="GET" action="{{ url_for('customers.list_customers') }}" style="display:flex; gap:10px; flex-grow:1; max-width:500px;">
+        <input type="text" name="search" class="input-engraved" placeholder="Search by name, phone, email..." value="{{ search }}">
+        <button type="submit" class="btn-metal"><i class="fas fa-search"></i></button>
+        {% if search %}
+        <a href="{{ url_for('customers.list_customers') }}" class="btn-metal" style="color:var(--color-text-muted);"><i class="fas fa-times"></i></a>
+        {% endif %}
+    </form>
+    
+    {% if current_user.role in ['Admin', 'Receptionist'] %}
+    <a href="{{ url_for('customers.add') }}" class="btn-metal"><i class="fas fa-plus"></i> NEW CUSTOMER</a>
+    {% endif %}
+</div>
+
+<div class="panel-metal" style="padding:0;">
+    {% if customers %}
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>NAME</th>
+                <th>CONTACT</th>
+                <th>VISITS</th>
+                <th>JOINED</th>
+                <th style="text-align:right;">ACTIONS</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for c in customers %}
+            <tr>
+                <td>CST-{{ "%04d" | format(c.id) }}</td>
+                <td style="color:var(--color-gold); font-family:'Poppins', sans-serif; font-weight: 500, sans-serif;">{{ c.name }}</td>
+                <td>
+                    <div><i class="fas fa-phone text-gold" style="font-size:0.8rem;"></i> {{ c.phone or 'N/A' }}</div>
+                    <div style="font-size:0.85rem; color:var(--color-text-muted);">{{ c.email or 'N/A' }}</div>
+                </td>
+                <td><span class="badge-gold">{{ c.total_visits }}</span></td>
+                <td>{{ c.created_at.strftime('%Y-%m-%d') }}</td>
+                <td style="text-align:right; gap:5px; display:flex; justify-content:flex-end;">
+                    <a href="{{ url_for('customers.detail', id=c.id) }}" class="btn-metal btn-small"><i class="fas fa-eye"></i></a>
+                    {% if current_user.role in ['Admin', 'Receptionist'] %}
+                    <a href="{{ url_for('customers.edit', id=c.id) }}" class="btn-metal btn-small" style="color:var(--color-blue-info); border-color:var(--color-blue-info);"><i class="fas fa-edit"></i></a>
+                    <form method="POST" action="{{ url_for('customers.delete', id=c.id) }}" style="display:inline;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        <button type="submit" class="btn-metal btn-small needs-confirmation" style="color:var(--color-red-alert); border-color:var(--color-red-alert);"><i class="fas fa-trash"></i></button>
+                    </form>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div style="padding:30px; text-align:center; color:var(--color-text-muted); font-family:'Inter', sans-serif; font-weight: 600;">
+        <i class="fas fa-users-slash" style="font-size:3rem; margin-bottom:15px; color:#444;"></i>
+        <p>NO CUSTOMERS FOUND IN DATABASE.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

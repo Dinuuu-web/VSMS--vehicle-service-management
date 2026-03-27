@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}Invoice Preview | GMS{% endblock %}
+{% block page_title %}INVOICE GENERATION DRAFT [WO-{{ "%04d" | format(job.id) }}]{% endblock %}
+
+{% block content %}
+<div class="panel-metal" style="max-width:800px; margin:0 auto; font-family:'Inter', sans-serif; font-weight: 600, monospace;">
+    
+    <div style="display:flex; justify-content:space-between; border-bottom:2px solid var(--color-gold); padding-bottom:15px; margin-bottom:20px;">
+        <div>
+            <h2 style="margin:0; font-family:'Poppins', sans-serif; font-weight: 500; color:var(--color-chrome);"><i class="fas fa-wrench text-gold"></i> GMS BILLING</h2>
+            <p style="color:var(--color-text-muted); margin:5px 0 0 0;">DRAFT MODE - PRE-CALCULATION</p>
+        </div>
+        <div style="text-align:right;">
+            <p style="margin:0; color:var(--color-chrome);">CLIENT: <span style="color:var(--color-gold);">{{ job.customer.name }}</span></p>
+            <p style="margin:5px 0 0 0; color:var(--color-chrome);">VEHICLE: <span style="color:var(--color-gold);">{{ job.vehicle.license_plate }}</span></p>
+        </div>
+    </div>
+    
+    <table style="margin-bottom:20px;">
+        <thead>
+            <tr>
+                <th>DESCRIPTION</th>
+                <th>QTY</th>
+                <th style="text-align:right;">UNIT PRICE</th>
+                <th style="text-align:right;">TOTAL</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Services -->
+            {% for js in job.job_services %}
+            <tr>
+                <td>Service: {{ js.service.name }}</td>
+                <td>1</td>
+                <td style="text-align:right;">${{ "%.2f"|format(js.price) }}</td>
+                <td style="text-align:right;">${{ "%.2f"|format(js.price) }}</td>
+            </tr>
+            {% endfor %}
+            
+            <!-- Parts -->
+            {% for jp in job.job_parts %}
+            <tr>
+                <td>Part: {{ jp.part.part_name }}</td>
+                <td>{{ jp.quantity_used }}</td>
+                <td style="text-align:right;">${{ "%.2f"|format(jp.unit_price) }}</td>
+                <td style="text-align:right;">${{ "%.2f"|format(jp.unit_price * jp.quantity_used) }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    <div style="display:flex; justify-content:flex-end;">
+        <div style="width:300px; background:#0a0a0a; border:1px solid #333; padding:15px; border-radius:4px;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                <span>SUBTOTAL:</span>
+                <span>${{ "%.2f"|format(subtotal) }}</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:10px; color:var(--color-text-muted);">
+                <span>GST (18%):</span>
+                <span>${{ "%.2f"|format(tax) }}</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; border-top:1px solid #444; padding-top:10px; font-size:1.3rem; color:var(--color-gold); font-weight:bold;">
+                <span>TOTAL:</span>
+                <span>${{ "%.2f"|format(total) }}</span>
+            </div>
+        </div>
+    </div>
+    
+    <div style="margin-top:30px; display:flex; justify-content:space-between; border-top:1px solid #333; padding-top:20px;">
+        <a href="{{ url_for('jobs.detail', id=job.id) }}" class="btn-metal"><i class="fas fa-arrow-left"></i> BACK TO JOB</a>
+        
+        <form method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            <button type="submit" class="btn-metal" style="color:var(--color-green-ok); border-color:var(--color-green-ok);">
+                <i class="fas fa-check-double"></i> CONFIRM & FINALIZE INVOICE
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

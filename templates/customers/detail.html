@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}Customer Detail | GMS{% endblock %}
+{% block page_title %}CUSTOMER PROFILE: {{ customer.name | upper }}{% endblock %}
+
+{% block content %}
+<div style="display:flex; gap:20px; flex-wrap:wrap;">
+    <!-- Profile Card -->
+    <div class="panel-metal" style="flex:1; min-width:300px;">
+        <h3 style="margin-top:0; border-bottom:1px solid #333; padding-bottom:10px; color:var(--color-gold);">
+            <i class="fas fa-id-card"></i> DOSSIER
+        </h3>
+        <div style="font-family:'Inter', sans-serif; font-weight: 600; font-size:1.1rem; line-height:1.8;">
+            <div><span style="color:var(--color-text-muted); display:inline-block; width:100px;">ID:</span> CST-{{ "%04d" | format(customer.id) }}</div>
+            <div><span style="color:var(--color-text-muted); display:inline-block; width:100px;">PHONE:</span> {{ customer.phone or 'UNKNOWN' }}</div>
+            <div><span style="color:var(--color-text-muted); display:inline-block; width:100px;">EMAIL:</span> {{ customer.email or 'UNKNOWN' }}</div>
+            <div><span style="color:var(--color-text-muted); display:inline-block; width:100px;">JOINED:</span> {{ customer.created_at.strftime('%Y-%m-%d') }}</div>
+            <div><span style="color:var(--color-text-muted); display:inline-block; width:100px;">VISITS:</span> <span class="text-gold">{{ customer.total_visits }}</span></div>
+            
+            <div style="margin-top:15px; border-top:1px dashed #444; padding-top:15px;">
+                <span style="color:var(--color-text-muted); display:block; margin-bottom:5px;">ADDRESS:</span>
+                <div style="background:#111; padding:10px; border:1px solid #333; border-radius:4px;">
+                    {{ customer.address or 'NOT PROVIDED' }}
+                </div>
+            </div>
+        </div>
+        
+        {% if current_user.role in ['Admin', 'Receptionist'] %}
+        <div style="margin-top:20px; display:flex; gap:10px;">
+            <a href="{{ url_for('customers.edit', id=customer.id) }}" class="btn-metal"><i class="fas fa-edit"></i> UPDATE PROFILE</a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Vehicles & History -->
+    <div class="panel-metal" style="flex:2; min-width:400px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #333; padding-bottom:10px; margin-bottom:15px;">
+            <h3 style="margin:0; color:var(--color-chrome);">
+                <i class="fas fa-car-side text-gold"></i> REGISTERED VEHICLES
+            </h3>
+            {% if current_user.role in ['Admin', 'Receptionist'] %}
+            <!-- For future implementation: <a href="/vehicles/add?customer_id={{ customer.id }}" class="btn-metal btn-small"><i class="fas fa-plus"></i> ADD VEHICLE</a> -->
+            {% endif %}
+        </div>
+        
+        {% if customer.vehicles %}
+            <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:15px;">
+                {% for v in customer.vehicles %}
+                <div style="background:linear-gradient(145deg, #1e1e1e, #141414); border:1px solid #333; border-radius:6px; padding:15px; box-shadow:0 4px 6px rgba(0,0,0,0.5);">
+                    <div style="font-family:'Poppins', sans-serif; font-weight: 500; font-size:1.2rem; color:var(--color-gold); border-bottom:1px dotted #444; padding-bottom:5px; margin-bottom:10px; display:flex; justify-content:space-between;">
+                        <span>{{ v.make }} {{ v.model }}</span>
+                        <span>{{ v.year or '' }}</span>
+                    </div>
+                    <div style="font-family:'Inter', sans-serif; font-weight: 600; font-size:0.9rem; line-height:1.6;">
+                        <div><span style="color:#888;">PLATE:</span> <span style="color:#fff;">{{ v.license_plate }}</span></div>
+                        <div><span style="color:#888;">VIN:</span> {{ v.vin or 'N/A' }}</div>
+                        <div><span style="color:#888;">MILEAGE:</span> {{ v.mileage }} km</div>
+                    </div>
+                    <div style="margin-top:15px; text-align:right;">
+                        <!-- Under construction -->
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div style="padding:20px; text-align:center; color:var(--color-text-muted); font-family:'Inter', sans-serif; font-weight: 600;">
+                <i class="fas fa-exclamation-circle text-gold" style="font-size:2rem; margin-bottom:10px;"></i>
+                <p>NO VEHICLES REGISTERED TO THIS PROFILE.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

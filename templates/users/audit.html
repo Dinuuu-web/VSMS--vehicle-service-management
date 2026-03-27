@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Audit Logs | GMS{% endblock %}
+{% block page_title %}SYSTEM EVENT AUDIT LOGS{% endblock %}
+
+{% block content %}
+<div class="glass-card" style="margin-bottom:24px;">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h3 style="margin:0; color:var(--text-primary);">
+            <i class="fas fa-database text-accent"></i> IMMUTABLE LEDGER OF ACTIONS
+        </h3>
+        <a href="{{ url_for('users.list_users') }}" class="btn-metal btn-small"><i class="fas fa-arrow-left"></i> RETURN TO ROSTER</a>
+    </div>
+    
+    <form method="GET" action="{{ url_for('users.audit_logs') }}" style="display:flex; gap:15px; align-items:flex-end; margin-top:20px; border-top:1px solid rgba(255,255,255,0.1); padding-top:20px;">
+        <div style="display:flex; flex-direction:column; flex: 1;">
+            <label style="font-size:0.75rem; color:var(--text-muted); margin-bottom:4px;">Operator</label>
+            <select name="user_id" class="input-engraved" style="padding:8px;">
+                <option value="">All Operators...</option>
+                {% for u in users %}
+                <option value="{{ u.id }}" {% if user_filter == u.id|string %}selected{% endif %}>{{ u.username }} ({{ u.role }})</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div style="display:flex; flex-direction:column; flex: 1;">
+            <label style="font-size:0.75rem; color:var(--text-muted); margin-bottom:4px;">Action Protocol</label>
+            <select name="action" class="input-engraved" style="padding:8px;">
+                <option value="">All Actions...</option>
+                {% for a in actions %}
+                <option value="{{ a }}" {% if action_filter == a %}selected{% endif %}>{{ a }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div style="display:flex; flex-direction:column; width:100px;">
+            <label style="font-size:0.75rem; color:var(--text-muted); margin-bottom:4px;">Limit</label>
+            <input type="number" name="limit" value="{{ limit_filter }}" class="input-engraved" style="padding:8px;">
+        </div>
+        <div style="display:flex; gap:8px;">
+            <button type="submit" class="btn-metal"><i class="fas fa-filter"></i> Apply</button>
+            {% if user_filter or action_filter or limit_filter != 150 %}
+            <a href="{{ url_for('users.audit_logs') }}" class="btn-metal" style="background:rgba(239,68,68,0.1); color:#ef4444; border-color:rgba(239,68,68,0.3);"><i class="fas fa-times"></i> Clear</a>
+            {% endif %}
+        </div>
+    </form>
+</div>
+
+<div class="glass-card" style="padding:0;">
+    {% if logs %}
+    <table style="font-family:'Inter', sans-serif; font-weight: 600, monospace; font-size:0.9rem;">
+        <thead style="background:#111;">
+            <tr>
+                <th>TIMESTAMP (UTC)</th>
+                <th>OPERATOR</th>
+                <th>ACTION PROTOCOL</th>
+                <th>TARGET ENTITY</th>
+                <th>RECORD ID</th>
+                <th>SOURCE IP</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for log in logs %}
+            <tr>
+                <td style="color:var(--text-muted); font-family:'Inter', sans-serif; font-weight: 600, monospace;">{{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                <td><span style="color:var(--text-primary); font-weight: 500;">{{ log.user.username if log.user else 'SYSTEM' }}</span></td>
+                <td>
+                    <span style="background: rgba(168,85,247,0.1); color:var(--accent); border: 1px solid var(--accent); padding:4px 8px; border-radius:12px; font-size:0.7rem; font-family:'Inter', sans-serif; font-weight:600; letter-spacing:0.5px;">{{ log.action | upper }}</span>
+                </td>
+                <td style="font-family:'Inter', sans-serif; font-weight: 600, monospace;">{{ log.table_name }}</td>
+                <td style="font-family:'Inter', sans-serif; font-weight: 600, monospace;">#{{ log.record_id or 'N/A' }}</td>
+                <td style="color:var(--text-muted); font-family:'Inter', sans-serif; font-weight: 600, monospace;">{{ log.ip_address }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div style="padding:60px; text-align:center; color:var(--text-muted);">
+        <i class="fas fa-ghost" style="font-size:3rem; margin-bottom:15px; opacity:0.3;"></i>
+        <p style="font-family:'Inter', sans-serif; font-weight:500;">NO AUDIT EVENTS RECORDED.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

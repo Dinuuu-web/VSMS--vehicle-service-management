@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}System Operators | GMS{% endblock %}
+{% block page_title %}PERSONNEL DATABASE{% endblock %}
+
+{% block content %}
+<div class="panel-metal" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+    <div style="font-family:'Inter', sans-serif; font-weight: 600; color:var(--color-text-muted);">
+        <i class="fas fa-shield-alt text-gold"></i> GLOBAL ADMIN CLEARANCE GRANTED
+    </div>
+    
+    <div>
+        <a href="{{ url_for('users.audit_logs') }}" class="btn-metal" style="margin-right:10px; color:var(--color-blue-info); border-color:var(--color-blue-info);"><i class="fas fa-history"></i> AUDIT LOGS</a>
+        <a href="{{ url_for('users.add') }}" class="btn-metal"><i class="fas fa-user-plus"></i> NEW OPERATOR</a>
+    </div>
+</div>
+
+<div class="panel-metal" style="padding:0;">
+    {% if users %}
+    <table>
+        <thead>
+            <tr>
+                <th>OPERATOR ID (UUID)</th>
+                <th>CALLSIGN</th>
+                <th>CLEARANCE LEVEL</th>
+                <th>ENCRYPTED EMAIL</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for u in users %}
+            <tr>
+                <td style="color:#666; font-family:'Inter', sans-serif; font-weight: 600; font-size:0.8rem;">OPRT-{{ "%04d" | format(u.id) }}-{{ u.created_at.strftime('%Y%j') }}</td>
+                <td style="color:var(--color-gold); font-family:'Poppins', sans-serif; font-weight: 500; font-size:1.1rem; letter-spacing:1px;">
+                    {% if u.id == current_user.id %}
+                    <i class="fas fa-star" title="You" style="font-size:0.7rem;"></i> 
+                    {% endif %}
+                    {{ u.username }}
+                </td>
+                <td>
+                    {% if u.role == 'Admin' %}
+                    <span class="badge-gold" style="background:#5a1111; color:#ffcccc; border-color:#ff4444;">
+                    {% elif u.role == 'Mechanic' %}
+                    <span class="badge-gold" style="background:#1a3a3a; color:#aaffff; border-color:#11aaaa;">
+                    {% else %}
+                    <span class="badge-gold">
+                    {% endif %}
+                        {{ u.role | upper }}
+                    </span>
+                </td>
+                <td style="font-family:'Inter', sans-serif; font-weight: 600;">{{ u.email }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>CRITICAL ERROR: No operators found.</p>
+    {% endif %}
+</div>
+{% endblock %}

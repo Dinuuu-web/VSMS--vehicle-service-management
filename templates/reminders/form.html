@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}New Reminder - VSMS{% endblock %}
+{% block page_title %}Schedule Service Reminder{% endblock %}
+
+{% block content %}
+<div class="glass-card fade-in">
+    <form method="POST" action="{{ url_for('reminders.add') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+        
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+            <div>
+                <label style="font-family:'Inter', sans-serif; font-weight: 600; color:var(--text-muted); font-size:0.8rem;">VEHICLE</label>
+                <select name="vehicle_id" class="input-engraved" required>
+                    <option value="">Select a vehicle...</option>
+                    {% for v in vehicles %}
+                    <option value="{{ v.id }}">{{ v.license_plate }} ({{ v.make }} {{ v.model }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div>
+                <label style="font-family:'Inter', sans-serif; font-weight: 600; color:var(--text-muted); font-size:0.8rem;">REMINDER DATE</label>
+                <input type="date" name="reminder_date" class="input-engraved" required>
+            </div>
+            
+            <div>
+                <label style="font-family:'Inter', sans-serif; font-weight: 600; color:var(--text-muted); font-size:0.8rem;">SERVICE TYPE</label>
+                <select name="service_type" class="input-engraved" required>
+                    <option value="General Service">General Service (Oil, Filters)</option>
+                    <option value="Brake Check">Brake Check & Replacement</option>
+                    <option value="Tire Rotation/Alignment">Tire Rotation/Alignment</option>
+                    <option value="Battery Check">Battery Check</option>
+                    <option value="AC Service">AC Service</option>
+                    <option value="Pollution Check (PUC)">Pollution Check (PUC)</option>
+                    <option value="Insurance Renewal">Insurance Renewal</option>
+                    <option value="Other">Other Custom Service</option>
+                </select>
+            </div>
+            
+            <div style="grid-column: span 2;">
+                <label style="font-family:'Inter', sans-serif; font-weight: 600; color:var(--text-muted); font-size:0.8rem;">ADDITIONAL NOTES</label>
+                <input type="text" name="notes" class="input-engraved" placeholder="e.g. Needs engine diagnostic, customer requested early morning block">
+            </div>
+        </div>
+        
+        <div style="margin-top:20px; text-align:right;">
+            <button type="submit" class="btn-metal"><i class="fas fa-calendar-check"></i> SCHEDULE REMINDER</button>
+        </div>
+    </form>
+</div>
+{% endblock %}
