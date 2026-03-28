@@ -1,13 +1,14 @@
 # pyre-ignore-all-errors[21, 16]
-import os
 from dotenv import load_dotenv  # type: ignore
 load_dotenv()
+import os
 
 import logging
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+logger.info("Starting VSMS application...")
 
 from flask import Flask, request, g, render_template
-from flask_session import Session
 from flask_wtf.csrf import CSRFProtect
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
@@ -16,16 +17,27 @@ from models import db, User
 import jwt
 
 csrf = CSRFProtect()
-sess = Session()
-limiter = Limiter(key_func=get_remote_address)
+limiter = Limiter(
+    key_func=get_remote_address,
+    storage_uri="memory://",
+    default_limits=["200 per day", "50 per hour"]
+)
 
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
     Config.init_app(app)
 
+    BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv(
+        'DATABASE_URL', 
+        f'sqlite:///{os.path.join(BASE_DIR, "garage.db")}'
+    )
+    app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'fallback-secret-key-2024')
+    app.config['JWT_SECRET'] = os.getenv('JWT_SECRET', 'fallback-jwt-secret-2024')
+    app.config['SESSION_TYPE'] = 'null' # Use flask default session
+
     db.init_app(app)
-    sess.init_app(app)
     csrf.init_app(app)
     limiter.init_app(app)
 
@@ -63,8 +75,8 @@ def create_app():
                 bp = getattr(mod, bp_name)
                 app.register_blueprint(bp, url_prefix=prefix)
             except Exception as e:
-                # Silently skip missing blueprints until they are built
-                pass
+                print(f"Import error: {e}")
+                raise
 
         # JWT Middleware
         @app.before_request
@@ -164,6 +176,7 @@ def create_app():
 
     return app
 
+app = create_app()
+
 if __name__ == '__main__':
-    app = create_app()
-    app.run(debug=True, port=5000)
+    app.run(debug=False, host='0.0.0.0', port=5000)
