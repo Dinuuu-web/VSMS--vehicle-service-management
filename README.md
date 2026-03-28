@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <div align="center">
   
 # 🚀 VSMS: Vehicle Service Management System
@@ -109,3 +110,6 @@ Check out the code in the GitHub link below to see how I handled robust backend 
 🔗 GitHub: [Insert Your Link Here]
 #SoftwareEngineering #Flask #Python #WebDevelopment #SaaS #Portfolio #FullStack
 ```
+=======
+# VSMS
+>>>>>>> 3a012c32cda69e548cd10541ca2fb7c0d74d7a48
