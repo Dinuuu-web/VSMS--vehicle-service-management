@@ -1,115 +1,189 @@
-<<<<<<< HEAD
 <div align="center">
-  
-# 🚀 VSMS: Vehicle Service Management System
 
-A production-ready Garage Management System featuring a custom, responsive **Glassmorphism UI** tailored for premium SaaS aesthetics. Engineered from scratch to manage complex garage operations seamlessly with optimistic UI pipelines, comprehensive billing generation, and dynamic business analytics.
+# 🚗 VSMS: Vehicle Service Management System
+### *Smart Service. Seamless Management.*
 
-![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white) 
-![Flask](https://img.shields.io/badge/Flask-000000?style=for-the-badge&logo=flask&logoColor=white) 
+A production-ready Vehicle Service Management System featuring a custom
+**Glassmorphism UI**, role-based access control, AI diagnostics, 
+job card pipeline, automated PDF invoicing, and real-time analytics.
+
+![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![Flask](https://img.shields.io/badge/Flask-000000?style=for-the-badge&logo=flask&logoColor=white)
 ![SQLite](https://img.shields.io/badge/SQLite-07405E?style=for-the-badge&logo=sqlite&logoColor=white)
-![Vanilla HTML/CSS/JS](https://img.shields.io/badge/Vanilla-JS/CSS-E34F26?style=for-the-badge&logo=html5&logoColor=white)
-
-<br/>
-<br/>
+![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
+![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)
 
 </div>
 
-## ✨ Key Features & Technical Highlights
+---
 
-### 🎨 Premium Dark/Light Theme System
-- Built entirely on **CSS Variables**, stripping away heavy neon gradients for a strictly regulated, professional SaaS palette (`slate`, `#0f172a`, `#22c55e`).
-- Integrated dynamic `localStorage` swapping mechanisms retaining native **Glassmorphism** overlays across 35+ fully responsive internal layouts.
-- Rigorous typographic hierarchy scaled with Google Fonts: **Poppins** (structural headings) and **Inter** (body and statistical analysis).
+## 👨‍💻 Developed By
 
-### 🔄 Optimistic UI Kanban Board
-- A custom-built pipeline engine utilizing asynchronous Fetch operations for seamless drag-and-drop job management.
-- Hardened with **error-boundary rollbacks** to automatically revert visual statuses guaranteeing that database constraints and client states are always synchronized.
+| Developer | Role |
+|-----------|------|
+| **Dinbandhu Choudhary** | Full Stack Developer |
+| **Aditya Hardas** | Full Stack Developer |
 
-### 📈 Business Intelligence Dashboard
-- Real-time `Chart.js` implementations featuring custom timeline filters (Daily/Weekly/Monthly) mapping exact service revenue against active job statuses.
-- Advanced animated SVG gauges mapping critical workspace availability and task efficiency organically updating without standard reloading delays.
-
-### 💳 Complete Billing & Export Architecture
-- Programmatic, beautiful PDF invoice generator powered directly by **ReportLab**, executing complex table boundaries mapping taxes, labor, and discrete inventory parts natively.
-- Custom PyThon streaming generators capable of flushing massive billing datasets into `.csv` exports iteratively without risking application memory-exhaustion.
-
-### 🛡️ Production Grade Stability
-Robust middleware intercepting deep-level operational exceptions, returning clean Jinja2-rendered 500 error logs or Toast Notifications dynamically to the administrators. Complete role-based security validation utilizing dynamic context processors.
+> 🎓 College Mini Project | Bharat College of Engineering, Badlapur | 2026
 
 ---
 
-## 💻 Tech Stack Overview
+## ✨ Features
+
+- 🔐 **Secure Authentication** — bcrypt hashing, JWT tokens, RBAC (Admin/Mechanic/Receptionist)
+- 📊 **Interactive Dashboard** — real-time stats, animated SVG gauges, Chart.js analytics
+- 📋 **Job Card Pipeline** — Kanban-style workflow (Received → Diagnosing → In Progress → Ready → Delivered)
+- 📱 **QR Status Tracking** — customers scan QR to track their vehicle live
+- 👥 **Customer & Vehicle Management** — full service history, vehicle health score
+- 📦 **Inventory Management** — stock tracking, low stock alerts, auto-deduction
+- 📅 **Appointment Scheduling** — calendar view, conflict detection
+- 💰 **Billing & Invoicing** — GST-compliant PDF invoices, multiple payment modes
+- 🤖 **AI Assistant** — Gemini-powered diagnosis, service suggestions, chatbot
+- 📊 **Reports & Analytics** — revenue, mechanic performance, CSV export
+- 🔍 **Vehicle Inspections** — 7-point checklist with health score
+- 💸 **Expense Tracker** — garage expense management with P&L view
+- 👥 **Mechanic Attendance** — check-in/check-out, hours tracking
+- 🔔 **Smart Reminders** — service due alerts for customers
+- 🎨 **5 Themes** — Dark, Light, Blue, Purple, Green (saved to localStorage)
+- ⚙️ **Settings Panel** — garage profile, theme, notifications, account
+
+---
+
+## 💻 Tech Stack
 
 | Category | Technologies |
-| --- | --- |
-| **Backend** | Python, Flask, Flask-SQLAlchemy, ReportLab, Werkzeug |
-| **Frontend Setup** | HTML5, Jinja2, Vanilla JavaScript, Chart.js, Custom CSS Protocol  |
-| **Database** | SQLite (Production-Ready schema), integrated seeded dummy instances |
-| **UI Paradigm** | Glassmorphism, Micro-Animations, Variable Scaling, Responsive Grids |
+|----------|-------------|
+| **Backend** | Python 3.11, Flask 3.0, Flask-SQLAlchemy, Flask-Login, Flask-WTF |
+| **Database** | SQLite, SQLAlchemy ORM |
+| **Frontend** | HTML5, CSS3, Vanilla JavaScript, Jinja2, Chart.js |
+| **Security** | bcrypt, PyJWT, CSRF Protection, Rate Limiting |
+| **AI** | Google Gemini API (gemini-1.5-flash) |
+| **PDF/QR** | ReportLab, qrcode, Pillow |
+| **UI Style** | Glassmorphism, Neumorphism, CSS Animations |
 
 ---
 
-## ⚙️ Quick Start Installation
+## 🔐 Default Login Credentials
 
-1. **Clone the repository:**
-   ```bash
-   git clone <repo-url>
-   cd GMS
-   ```
-
-2. **Initialize a Virtual Environment:**
-   ```bash
-   python -m venv venv
-   # On macOS/Linux: 
-   source venv/bin/activate
-   # On Windows:
-   venv\Scripts\activate
-   ```
-
-3. **Install Dependencies:**
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-4. **Initialize Database & Seed Data:**
-   Use the utility script to generate the relational schema and inject the baseline 25+ demo service jobs required for the dashboard.
-   ```bash
-   python init_db.py
-   ```
-
-5. **Start the Production Application Server:**
-   ```bash
-   python app.py
-   ```
-   Navigate your browser to `http://127.0.0.1:5000` to review the system!
+| Username | Password | Role |
+|----------|----------|------|
+| `admin` | `Admin@123` | Admin |
+| `mechanic1` | `Mech@123` | Mechanic |
+| `mechanic2` | `Mech2@123` | Mechanic |
+| `receptionist1` | `Recep@123` | Receptionist |
+| `manager1` | `Mgr@123` | Admin |
 
 ---
 
-## 💼 LinkedIn Deployment Template
+## 🚀 Installation (Windows)
 
-*When you're ready to show off your project to recruiters and the community on LinkedIn, feel free to use or adapt this post!*
-
-```text
-🚀 Thrilled to officially deploy VSMS — a production-ready Garage Management System I've been engineering from the ground up!
-
-When building this, I didn't want a generic CRUD app. I wanted to build a polished, SaaS-grade platform that a real business could rely on every single day to scale operations seamlessly.
-
-✨ Technical Highlights:
-🔹 Premium UI/UX: Developed a custom 35+ view Glassmorphism design system natively, fully equipped with a modern Dark/Light theme protocol running strictly on CSS variables.
-🔹 Optimistic UI Architecture: Built an asynchronous drag-and-drop Kanban pipeline providing zero latency responses and automatic rollback boundaries on network failure.
-🔹 Business Intelligence: Interactive Chart.js analytics dashboards integrating dynamic server-side time slicing.
-🔹 Powerful Exporting: Handled dynamic PDF generation explicitly with ReportLab and engineered programmatic data generators streaming massive datasets into CSVs without locking up server memory.
-
-⚙️ Tech Stack: Flask, Python, SQLAlchemy, Jinja2, Vanilla JS/CSS.
-
-The focus over the last few weeks was bulletproofing the core logic, establishing deep layout stability across devices, and fine-tuning typography with an Inter/Poppins Google Font hierarchy to give it a 10/10 polish pass.
-
-Check out the code in the GitHub link below to see how I handled robust backend routing alongside micro-UX enhancements! 👇
-
-🔗 GitHub: [Insert Your Link Here]
-#SoftwareEngineering #Flask #Python #WebDevelopment #SaaS #Portfolio #FullStack
+**1. Clone the repository:**
+```bash
+git clone https://github.com/Dinuuu-web/VSMS--vehicle-service-management.git
+cd VSMS--vehicle-service-management
 ```
-=======
-# VSMS
->>>>>>> 3a012c32cda69e548cd10541ca2fb7c0d74d7a48
+
+**2. Create virtual environment:**
+```bash
+python -m venv venv
+venv\Scripts\activate
+```
+
+**3. Install dependencies:**
+```bash
+pip install -r requirements.txt
+```
+
+**4. Setup .env file:**
+```env
+SECRET_KEY=your-secret-key-here
+JWT_SECRET=your-jwt-secret-here
+DATABASE_URL=sqlite:///garage.db
+GEMINI_API_KEY=your-gemini-api-key
+FLASK_ENV=development
+```
+
+**5. Initialize database:**
+```bash
+python init_db.py
+```
+
+**6. Run the application:**
+```bash
+python app.py
+```
+
+Open browser → `http://localhost:5000`
+
+---
+
+## 📂 Project Structure
+```
+VSMS/
+├── app.py                 # Application entry point
+├── auth.py                # Authentication & RBAC
+├── config.py              # Configuration
+├── models.py              # SQLAlchemy models
+├── init_db.py             # Database + seed data
+├── routes/
+│   ├── dashboard.py
+│   ├── customers.py
+│   ├── vehicles.py
+│   ├── jobs.py
+│   ├── inventory.py
+│   ├── appointments.py
+│   ├── billing.py
+│   ├── reports.py
+│   ├── ai_assistant.py
+│   ├── inspections.py
+│   ├── expenses.py
+│   ├── attendance.py
+│   ├── reminders.py
+│   └── settings.py
+├── static/
+│   ├── css/
+│   ├── js/
+│   └── qrcodes/
+└── templates/
+    ├── base.html
+    ├── auth/
+    ├── dashboard.html
+    └── [all module templates]
+```
+
+---
+
+## 🌐 Key API Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/login` | User authentication |
+| GET | `/dashboard` | Main dashboard |
+| GET/POST | `/jobs` | Job card management |
+| GET | `/status/<token>` | Public QR status page |
+| POST | `/ai/diagnose` | AI vehicle diagnosis |
+| POST | `/ai/chat` | AI chatbot |
+| GET | `/billing/<id>/pdf` | Download invoice PDF |
+| GET | `/jobs/<id>/pdf` | Download job card PDF |
+| GET | `/reports/revenue` | Revenue report |
+| GET | `/api/search` | Global search |
+| GET | `/api/notifications` | Notifications |
+
+---
+
+## 🖼️ Screenshots
+
+> *Coming soon — Dashboard, Job Cards, Invoice, QR Status Page*
+
+---
+
+## 📜 License
+
+MIT License © 2026 — Dinbandhu Choudhary & Aditya Hardas
+
+---
+
+<div align="center">
+  <b>© 2026 VSMS | Developed by Dinbandhu Choudhary & Aditya Hardas</b><br/>
+  <i>Bharat College of Engineering, Badlapur</i>
+</div>
